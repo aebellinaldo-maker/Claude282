@@ -74,7 +74,7 @@
     const wrap = document.createElement('div'); wrap.className = 'm3d';
     wrap.style.cssText = `position:relative;width:${W}px;height:${H}px;flex:none;min-width:0;cursor:grab;transform-style:preserve-3d`;
     svg.style.display = 'none'; svg.parentNode.insertBefore(wrap, svg);
-    const renderer = new T.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(2.5, (devicePixelRatio || 1) * 1.5)); renderer.setSize(W, H);
+    const renderer = new T.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1)); renderer.setSize(W, H);
     wrap.appendChild(renderer.domElement);
     const scene = new T.Scene(), camera = new T.PerspectiveCamera(opt.fov || 30, W / H, .1, 100);
     scene.add(new T.AmbientLight(0xffffff, .55));

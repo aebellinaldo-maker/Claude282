@@ -1,4 +1,7 @@
 <title>Das Auge und die Brille</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
@@ -91,6 +94,40 @@ th,td{padding:10px 14px;border-bottom:1px solid var(--line);text-align:left;vert
 th{font-family:var(--display);color:var(--muted);font-weight:500;font-size:16px;letter-spacing:.06em;text-transform:uppercase}
 input[type=range]{width:100%;accent-color:var(--ray)}
 .big{font:700 34px var(--display);color:var(--ray);font-variant-numeric:tabular-nums}
+/* ---------- cinematic product-page look ---------- */
+html,body{background:#000}
+.slide{isolation:isolate;overflow:hidden}
+.slide::after{content:attr(data-word);position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);z-index:-1;pointer-events:none;white-space:nowrap;
+  font:700 290px/1 var(--display);letter-spacing:-.05em;background:linear-gradient(95deg,#1c2733 10%,#56677a 45%,var(--glow) 75%,#fff 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;opacity:.2}
+.slide.active::after{animation:wordIn 1.6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes wordIn{from{opacity:0;letter-spacing:.25em;filter:blur(24px)}to{opacity:.2;letter-spacing:-.05em;filter:none}}
+.slide::before{content:"";position:absolute;left:10%;right:10%;bottom:-35%;height:75%;z-index:-2;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,color-mix(in srgb,var(--glow) 38%,transparent),transparent 68%);filter:blur(30px)}
+.slide.active::before{animation:glowIn 2s ease-out both}
+@keyframes glowIn{from{opacity:0;transform:scale(.6)}}
+.card{background:linear-gradient(180deg,#ffffff0c,#ffffff04)!important;border:1px solid #ffffff14!important}
+.card.fig{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+.card.fig::after{display:none}
+.m3d::before{content:"";position:absolute;left:12%;right:12%;bottom:4%;height:40%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 60%,color-mix(in srgb,var(--glow,#ff8a3d) 55%,transparent),transparent 70%);filter:blur(18px);animation:halo 4s ease-in-out infinite}
+.m3d canvas{position:relative;z-index:1}.l3d{z-index:2}
+h2 .w{display:inline-block;white-space:pre}
+.slide.active h2 .w{animation:wIn .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i) * 70ms)}
+@keyframes wIn{from{opacity:0;transform:translateY(34px) rotateX(-70deg);filter:blur(12px)}to{opacity:1;transform:none;filter:none}}
+.stat{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.stat .num{font:700 64px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,#fff 30%,var(--glow,#ffc94a));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .unit{font:700 26px var(--display);color:var(--glow,#ffc94a)}
+.stat .cap{flex-basis:100%;font-size:16px;color:var(--muted)}
+.stats{display:flex;gap:28px;flex-wrap:wrap}
+.stats .num{font-size:44px}.stats .unit{font-size:20px}.stats .cap{font-size:14px}
+#nav{position:fixed;right:max(14px,env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));z-index:30;display:flex;gap:8px}
+#nav button{width:52px;height:52px;border-radius:50%;border:1px solid #ffffff2a;background:#0b1520cc;color:var(--ink);font:700 22px var(--body);cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#nav button.wide{width:auto;padding:0 16px;border-radius:999px;font-size:15px}
+#nav button:active{transform:scale(.92);background:var(--iris);color:#000}
+@media (hover:none){#help{display:none}}
+.m3d{touch-action:none}
 /* ---------- 3D / VFX ---------- */
 #stage{perspective:1600px;transform-style:preserve-3d}
 .row{perspective:1200px}
@@ -132,7 +169,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 <div id="deck"><div id="stage">
 
 <!-- 1 TITEL -->
-<section class="slide" data-tr="iris" data-name="Start">
+<section class="slide" data-tr="iris" data-name="Start" data-word="OPTIK" style="--glow:#4fb3d9">
   <div class="row" style="align-items:center">
     <div class="col" style="flex:1.1;gap:20px">
       <div class="kicker">Physik · Optik</div>
@@ -167,7 +204,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 </section>
 
 <!-- 2 AUFBAU + LICHTWEG -->
-<section class="slide" data-tr="blink" data-name="Aufbau des Auges">
+<section class="slide" data-tr="blink" data-name="Aufbau des Auges" data-word="AUGE" style="--glow:#4fb3d9">
   <div class="kicker">1 · Aufbau des Auges</div>
   <h2>Welche Teile hat das Auge – und welchen Weg nimmt das Licht?</h2>
   <div class="row">
@@ -220,7 +257,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
         <div class="btns"><button class="btn" id="photonBtn" type="button">Licht losschicken</button></div>
       </div>
       <div class="memo">Eselsbrücke: <b>H</b>unde <b>K</b>önnen <b>P</b>rima <b>L</b>aufen, <b>G</b>urken <b>N</b>icht.</div>
-      <p class="muted" style="font-size:18px">Alles auf dem Weg ist durchsichtig. Das Auge ist etwa 2,4 cm groß – so breit wie eine 2-Euro-Münze.</p>
+      <div class="stat"><span class="num count" data-to="24">0</span><span class="unit">mm</span><span class="cap">groß ist das Auge – so breit wie eine 2-Euro-Münze. Alles auf dem Weg ist durchsichtig.</span></div>
     </div>
   </div>
   <aside class="notes"><div class="who">Person A · ca. 1 min</div>
@@ -228,7 +265,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 </section>
 
 <!-- 3 AUFGABEN + AKKOMMODATION -->
-<section class="slide" data-tr="cube" data-name="Aufgaben & Scharfstellen">
+<section class="slide" data-tr="cube" data-name="Aufgaben & Scharfstellen" data-word="FOKUS" style="--glow:#ff8a3d">
   <div class="kicker">1 · Aufbau des Auges</div>
   <h2>Wer macht was – und wie stellt das Auge scharf?</h2>
   <div class="row">
@@ -259,7 +296,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 </section>
 
 <!-- 4 VOM LICHT ZUM SEHEN -->
-<section class="slide" data-tr="blink" data-name="Vom Licht zum Sehen">
+<section class="slide" data-tr="blink" data-name="Vom Licht zum Sehen" data-word="SEHEN" style="--glow:#b391e6">
   <div class="kicker">2 · Vom Licht zum Sehen</div>
   <h2>Wie aus Licht ein Bild im Kopf wird</h2>
   <div class="row">
@@ -271,12 +308,13 @@ input[type=range]{width:100%;accent-color:var(--ray)}
     <div class="col" style="flex:1">
       <div class="card f">
         <h3>② Netzhaut: Licht → Strom</h3>
-        <ul style="font-size:19px"><li><b>Stäbchen</b> (≈ 120 Mio.): hell/dunkel, auch nachts</li><li><b>Zapfen</b> (≈ 6 Mio.): Farben – rot, grün, blau</li><li>Licht ändert einen <span class="term">Sehfarbstoff</span> → chemische Kettenreaktion → <b>elektrisches Signal</b></li></ul>
+        <div class="stats"><div class="stat"><span class="num count" data-to="120">0</span><span class="unit">Mio.</span><span class="cap">Stäbchen: hell/dunkel, auch nachts</span></div><div class="stat"><span class="num count" data-to="6">0</span><span class="unit">Mio.</span><span class="cap">Zapfen: Farben – rot, grün, blau</span></div></div>
+        <ul style="font-size:17px"><li>Licht ändert einen <span class="term">Sehfarbstoff</span> → chemische Kettenreaktion → <b>elektrisches Signal</b></li></ul>
       </div>
       <div class="card f" style="flex:1">
         <h3>③ Das Gehirn macht daraus Sehen</h3>
         <svg viewBox="0 0 420 70" style="width:100%"><circle cx="30" cy="35" r="22" class="eyeball"/><circle cx="16" cy="35" r="7" fill="var(--iris)"/><path d="M52 35 C150 35 200 10 330 30" fill="none" stroke="#e8c46a" stroke-width="5" class="pulse"/><text x="120" y="66" fill="var(--muted)">Sehnerv → Sehnervenkreuzung</text><ellipse cx="370" cy="32" rx="44" ry="30" fill="#e98fa0" opacity=".85"/><text x="342" y="37" style="fill:#3a0d16;font-weight:700">Sehrinde</text></svg>
-        <ul style="font-size:19px"><li>Deutet das umgedrehte Bild richtig (gelernt!)</li><li>Setzt beide Augen zu <b>3D</b> zusammen, füllt den blinden Fleck</li><li>Vergleicht mit dem Gedächtnis → wir <b>erkennen</b></li></ul>
+        <p style="font-size:17px">Deutet das umgedrehte Bild richtig, macht aus 2 Augen <b>3D</b> und vergleicht mit dem Gedächtnis → wir <b>erkennen</b>.</p>
       </div>
     </div>
   </div>
@@ -287,7 +325,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 </section>
 
 <!-- 5 KURZ & WEIT -->
-<section class="slide" data-tr="depth" data-name="Kurz- & Weitsichtigkeit">
+<section class="slide" data-tr="depth" data-name="Kurz- & Weitsichtigkeit" data-word="UNSCHARF" style="--glow:#ff5d5d">
   <div class="kicker">3 · Kurz- und Weitsichtigkeit</div>
   <h2>Wo treffen sich die Strahlen ohne Brille?</h2>
   <div class="row" style="gap:16px">
@@ -295,7 +333,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
     <div class="card f" style="flex:1"><h3>Kurzsichtig</h3><svg class="rd" data-r="405" viewBox="0 0 460 220"></svg><p style="font-size:18px"><b>Ferne</b> unscharf (Tafel). Treffpunkt <b style="color:var(--miss)">vor</b> der Netzhaut. Auge <b>zu lang</b> oder Brechkraft zu stark.</p></div>
     <div class="card f" style="flex:1"><h3>Weitsichtig</h3><svg class="rd" data-r="325" viewBox="0 0 460 220"></svg><p style="font-size:18px"><b>Nähe</b> unscharf (Handy). Treffpunkt <b style="color:var(--miss)">hinter</b> der Netzhaut. Auge <b>zu kurz</b> oder Brechkraft zu schwach.</p></div>
   </div>
-  <div class="memo f">Auf der Netzhaut kommt statt eines Punktes ein <b>Fleck</b> an (Unschärfekreis). Schon <b>1 mm</b> zu langes Auge ≈ <b>3 Dioptrien</b> kurzsichtig.</div>
+  <div class="row f" style="flex:0;align-items:center;gap:28px"><div class="stat" style="flex:none"><span class="num count" data-to="1">0</span><span class="unit">mm = 3 dpt</span></div><div class="memo" style="flex:1">Statt eines Punktes kommt ein <b>Fleck</b> an (Unschärfekreis). Schon <b>1 mm</b> zu langes Auge ≈ <b>3 Dioptrien</b> kurzsichtig.</div></div>
   <aside class="notes"><div class="who">Person C · ca. 1 min 45 s</div>
   „Bei vielen Menschen landet das Bild nicht scharf auf der Netzhaut. Licht von weit weg kommt fast parallel ins Auge. Beim gesunden Auge treffen sich die Strahlen genau auf der Netzhaut – grüner Punkt, scharf.<br>
   [weiter] <b>Kurzsichtige</b> sehen nah gut, aber in der Ferne unscharf – zum Beispiel die Tafel. Die Strahlen treffen sich zu früh, <b>vor</b> der Netzhaut, und laufen dann wieder auseinander. Meistens ist der Augapfel <b>zu lang</b> oder die Brechkraft zu stark.<br>
@@ -304,16 +342,17 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 </section>
 
 <!-- 6 BRECHUNG, LINSEN, DIOPTRIEN -->
-<section class="slide" data-tr="cube" data-name="Brechung & Linsen">
+<section class="slide" data-tr="cube" data-name="Brechung & Linsen" data-word="LINSE" style="--glow:#8fdcf5">
   <div class="kicker">4 · Wie funktioniert eine Brille?</div>
   <h2>Brechung, Linsen und Dioptrien</h2>
   <div class="row">
     <div class="col" style="flex:1">
       <div class="card">
         <h3>Warum knickt Licht im Glas ab?</h3>
-        <svg id="refr" viewBox="0 0 400 170" style="max-height:170px"></svg>
+        <svg id="refr" viewBox="0 0 400 170" style="max-height:130px"></svg>
         <p style="font-size:18px">In Glas ist Licht <b>langsamer</b> (≈ 200 000 statt 300 000 km/s). Trifft es schräg auf, wird eine Seite zuerst gebremst → der Strahl <b>knickt ab</b> = <span class="term">Brechung</span>. Wie ein Auto, das schräg auf eine Wiese fährt.</p>
       </div>
+      <div class="stat"><span class="num count" data-to="60">0</span><span class="unit">dpt</span><span class="cap">Brechkraft des ganzen Auges – ⅔ davon schafft die Hornhaut</span></div>
       <div class="memo">Licht wird immer zur <b>dickeren</b> Stelle des Glases hin geknickt.</div>
     </div>
     <div class="card fig" style="flex:1.2">
@@ -333,7 +372,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 </section>
 
 <!-- 7 KORREKTUR -->
-<section class="slide" data-tr="depth" data-name="Die Brille korrigiert">
+<section class="slide" data-tr="depth" data-name="Die Brille korrigiert" data-word="SCHARF" style="--glow:#4fd18b">
   <div class="kicker">4 · Wie wird das Bild wieder scharf?</div>
   <h2>Die Brille schiebt den Treffpunkt auf die Netzhaut</h2>
   <div class="row" style="gap:16px">
@@ -350,7 +389,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 </section>
 
 <!-- 8 ZUSAMMENFASSUNG -->
-<section class="slide" data-tr="blink" data-name="Zusammenfassung">
+<section class="slide" data-tr="blink" data-name="Zusammenfassung" data-word="KLAR" style="--glow:#ffc94a">
   <div class="kicker">Zusammenfassung</div>
   <h2>Das Wichtigste in 30 Sekunden</h2>
   <table>
@@ -374,6 +413,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 <div id="notes" aria-live="polite"></div>
 <div id="hud"><div id="bar"></div></div>
 <div id="count"></div>
+<div id="nav"><button id="notesBtn" class="wide" type="button">Text</button><button id="prevBtn" type="button" aria-label="Zurück">‹</button><button id="nextBtn" type="button" aria-label="Weiter">›</button></div>
 <div id="help">→ / Leertaste weiter · ← zurück · F Vollbild · N Sprechertext</div>
 
 <script src="lib/three.min.js"></script>
@@ -639,7 +679,13 @@ $$('.card, .fig').forEach(c => {
 const slides = $$('.slide'); let cur = 0, busy = false;
 const notes = $('#notes');
 function frags(s) { return $$('.f', s); }
+function countUp(s) {
+  $$('.count', s).forEach(c => { const to = +c.dataset.to, t0 = performance.now(), d = 1600;
+    (function st(now) { const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 4); c.textContent = Math.round(to * e).toLocaleString('de-DE'); if (k < 1) requestAnimationFrame(st); })(t0); });
+}
 function onEnter(s) {
+  countUp(s);
+  $$('h2 .w', s).forEach(w => { w.style.animation = 'none'; w.getBoundingClientRect(); w.style.animation = ''; });
   // restart draw animations on the entered slide
   $$('.draw, .lbl', s).forEach(p => { p.style.animation = 'none'; p.getBoundingClientRect(); p.style.animation = ''; });
   if (s.querySelector('#photon')) setTimeout(runPhoton, 900);
@@ -691,11 +737,13 @@ addEventListener('keydown', e => {
   if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(k)) { if (k === ' ' || k === 'Enter') { if (e.target.tagName === 'BUTTON') return; } e.preventDefault(); next(); }
   else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); prev(); }
   else if (k === 'Home') show(0, -1); else if (k === 'End') show(slides.length - 1, 1);
-  else if (k === 'f' || k === 'F') { (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.())?.catch?.(() => {}); }
+  else if (k === 'f' || k === 'F') { const d = document.documentElement; try { const r = document.fullscreenElement || document.webkitFullscreenElement ? (document.exitFullscreen || document.webkitExitFullscreen).call(document) : (d.requestFullscreen || d.webkitRequestFullscreen).call(d); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
   else if (k === 'n' || k === 'N') notes.classList.toggle('open');
 });
+$$('.slide h2').forEach(h => { const parts = h.innerHTML.split(/(\s+)/); let i = 0; h.innerHTML = parts.map(p => /^\s+$/.test(p) ? p : `<span class="w" style="--i:${i++}">${p}</span>`).join(''); });
+$('#nextBtn').onclick = () => next(); $('#prevBtn').onclick = () => prev(); $('#notesBtn').onclick = () => notes.classList.toggle('open');
 let tx = null;
-addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+addEventListener('touchstart', e => { tx = e.target.closest('.m3d, input, button, #notes') ? null : e.touches[0].clientX; }, { passive: true });
 addEventListener('touchend', e => { if (tx == null) return; const d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 50) (d < 0 ? next : prev)(); tx = null; });
 const start = Math.max(0, Math.min(slides.length - 1, (parseInt((location.hash.match(/folie-(\d+)/) || [])[1]) || 1) - 1));
 cur = start; slides[cur].classList.add('active'); ui(); onEnter(slides[cur]);
