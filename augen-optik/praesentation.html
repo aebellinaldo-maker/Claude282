@@ -91,16 +91,6 @@ th,td{padding:10px 14px;border-bottom:1px solid var(--line);text-align:left;vert
 th{font-family:var(--display);color:var(--muted);font-weight:500;font-size:16px;letter-spacing:.06em;text-transform:uppercase}
 input[type=range]{width:100%;accent-color:var(--ray)}
 .big{font:700 34px var(--display);color:var(--ray);font-variant-numeric:tabular-nums}
-/* ---------- 3D space: slides float on a ring, the camera flies between them ---------- */
-#world{position:absolute;inset:0;transform-style:preserve-3d}
-.slide{visibility:visible!important;opacity:.28;pointer-events:none;backface-visibility:hidden;border-radius:26px;
-  background:linear-gradient(160deg,#0f1d2bee,#08111bf2);border:1px solid #2a4660;
-  box-shadow:0 0 0 1px #4fb3d922,0 40px 120px -40px #000,0 0 80px -20px #4fb3d944;transition:opacity .9s,filter .9s;filter:saturate(.6)}
-.slide.active{opacity:1;pointer-events:auto;filter:none}
-.slide::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background:linear-gradient(115deg,transparent 30%,#ffffff10 45%,transparent 60%);background-size:300% 100%;animation:sheen 7s linear infinite}
-@keyframes sheen{from{background-position:120% 0}to{background-position:-120% 0}}
-#stage.flying .slide{opacity:.85}
 /* ---------- 3D / VFX ---------- */
 #stage{perspective:1600px;transform-style:preserve-3d}
 .row{perspective:1200px}
@@ -118,7 +108,10 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 .card.tilt{box-shadow:0 30px 60px -30px #000c,0 0 0 1px #ffffff08}
 .card.tilt::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),#ffffff22,transparent 50%);opacity:var(--go,0);transition:opacity .3s}
 .card.tilt > h3{transform:translateZ(40px)}
-.card.tilt > svg{transform:translateZ(30px)}
+.card.tilt > svg,.card.tilt > .m3d{transform:translateZ(30px)}
+.m3d canvas{display:block}
+.m3d:active{cursor:grabbing}
+.l3d{position:absolute;transform:translate(-50%,-50%);font:600 12.5px var(--body);color:var(--ink);background:#0b1520d9;border:1px solid #3a5a74;padding:2px 8px;border-radius:999px;white-space:nowrap;pointer-events:none;box-shadow:0 0 12px #4fb3d933}
 .slide.active .fig.tilt:not(.hover){animation:sway 10s ease-in-out infinite}
 @keyframes sway{0%,100%{transform:rotateY(-7deg) rotateX(4deg)}50%{transform:rotateY(7deg) rotateX(-4deg)}}
 .flow{fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-dasharray:2 44;opacity:0;filter:drop-shadow(0 0 5px var(--ray)) drop-shadow(0 0 10px var(--ray));animation:flowR 1.4s linear infinite,fadeIn .5s 1.3s forwards}
@@ -136,7 +129,7 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 </style>
 
 <canvas id="bgfx" aria-hidden="true"></canvas>
-<div id="deck"><div id="stage"><div id="world">
+<div id="deck"><div id="stage">
 
 <!-- 1 TITEL -->
 <section class="slide" data-tr="iris" data-name="Start">
@@ -375,13 +368,13 @@ input[type=range]{width:100%;accent-color:var(--ray)}
   „Fassen wir zusammen: Hornhaut und Linse bündeln das Licht. Auf der Netzhaut entsteht ein umgedrehtes Bild. Stäbchen und Zapfen machen daraus elektrische Signale, und das Gehirn macht daraus, was wir sehen. Passen Augenlänge und Brechkraft nicht zusammen, wird es unscharf: Kurzsichtig heißt Treffpunkt vor der Netzhaut und Minusglas. Weitsichtig heißt Treffpunkt hinter der Netzhaut und Plusglas. Danke fürs Zuhören – habt ihr Fragen?“</aside>
 </section>
 
-</div></div></div>
+</div></div>
 
 <div id="lids" aria-hidden="true"><div id="lidT"></div><div id="lidB"></div></div>
 <div id="notes" aria-live="polite"></div>
 <div id="hud"><div id="bar"></div></div>
 <div id="count"></div>
-<div id="help">→ / Leertaste weiter · ← zurück · F Vollbild · N Sprechertext · O 3D-Übersicht</div>
+<div id="help">→ / Leertaste weiter · ← zurück · F Vollbild · N Sprechertext</div>
 
 <script src="lib/three.min.js"></script>
 <script>window.THREE || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>')</script>
@@ -651,36 +644,29 @@ function onEnter(s) {
   $$('.draw, .lbl', s).forEach(p => { p.style.animation = 'none'; p.getBoundingClientRect(); p.style.animation = ''; });
   if (s.querySelector('#photon')) setTimeout(runPhoton, 900);
 }
-const RING = 2100, STEP = 40, RISE = 160, world = $('#world');
-slides.forEach((sl, i) => { sl.style.transform = `translateY(${i * RISE}px) rotateY(${i * STEP}deg) translateZ(${RING}px)`; });
-const cam = (i, pull = 0, tilt = 0) => `translateZ(${-RING - pull}px) rotateX(${tilt}deg) rotateY(${-i * STEP}deg) translateY(${-i * RISE}px)`;
-let overview = false;
-function fly(fromI, toI, done) {
-  const far = Math.abs(toI - fromI) > 1 ? 2600 : 1500;
-  if (reduce) { world.style.transform = cam(toI); done(); return; }
-  $('#stage').classList.add('flying');
-  const an = world.animate([
-    { transform: cam(fromI, overview ? 3800 : 0, overview ? 18 : 0) },
-    { transform: cam(fromI + (toI - fromI) * .35, far, 12), offset: .4 },
-    { transform: cam(toI, 0, 0) }
-  ], { duration: 1500, easing: 'cubic-bezier(.6,0,.25,1)' });
-  setTimeout(done, 900);
-  an.onfinish = () => { world.style.transform = cam(toI); $('#stage').classList.remove('flying'); busy = false; };
-  overview = false;
-}
 function show(i, dir = 1) {
-  if (i < 0 || i >= slides.length || i === cur && slides[i].classList.contains('active') && !overview) return;
-  const from = cur, to = slides[i];
+  if (i < 0 || i >= slides.length || i === cur && slides[i].classList.contains('active')) return;
+  const from = slides[cur], to = slides[i], tr = dir > 0 ? to.dataset.tr : 'focus';
+  const swap = () => {
+    from.classList.remove('active', 'focus-in', 'iris-in', 'cube-in', 'depth-in'); to.classList.remove('focus-out', 'cube-out', 'depth-out');
+    to.classList.add('active'); cur = i; ui(); onEnter(to);
+  };
   frags(to).forEach(f => f.classList.toggle('show', dir < 0));
+  if (reduce || from === to) { swap(); return; }
   busy = true;
-  slides[from].classList.remove('active');
-  fly(from, i, () => { to.classList.add('active'); cur = i; ui(); onEnter(to); if (reduce) busy = false; });
-}
-function toggleOverview() {
-  if (busy) return; overview = !overview;
-  world.animate([{ transform: world.style.transform }, { transform: overview ? cam(cur, 3800, 18) : cam(cur) }], { duration: 1100, easing: 'cubic-bezier(.6,0,.25,1)', fill: 'forwards' })
-    .onfinish = e => { world.style.transform = overview ? cam(cur, 3800, 18) : cam(cur); e.target.cancel(); };
-  $('#stage').classList.toggle('flying', overview);
+  if (tr === 'blink') {
+    $('#lids').classList.add('closed');
+    setTimeout(() => { swap(); to.classList.add('focus-in'); setTimeout(() => $('#lids').classList.remove('closed'), 120); busy = false; }, 260);
+  } else if (tr === 'cube' || tr === 'depth') {
+    from.classList.add(tr + '-out'); swap(); to.classList.add(tr + '-in');
+    setTimeout(() => { from.classList.remove(tr + '-out'); busy = false; }, tr === 'cube' ? 1000 : 700);
+  } else if (tr === 'iris') {
+    from.classList.add('focus-out'); swap(); from.classList.add('focus-out'); to.classList.add('iris-in');
+    setTimeout(() => { from.classList.remove('focus-out'); busy = false; }, 600);
+  } else {
+    from.classList.add('focus-out');
+    setTimeout(() => { from.classList.remove('focus-out'); swap(); to.classList.add('focus-in'); busy = false; }, 380);
+  }
 }
 function next() {
   if (busy) return; const f = frags(slides[cur]).find(x => !x.classList.contains('show'));
@@ -707,12 +693,12 @@ addEventListener('keydown', e => {
   else if (k === 'Home') show(0, -1); else if (k === 'End') show(slides.length - 1, 1);
   else if (k === 'f' || k === 'F') { (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.())?.catch?.(() => {}); }
   else if (k === 'n' || k === 'N') notes.classList.toggle('open');
-  else if (k === 'o' || k === 'O') toggleOverview();
 });
 let tx = null;
 addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
 addEventListener('touchend', e => { if (tx == null) return; const d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 50) (d < 0 ? next : prev)(); tx = null; });
 const start = Math.max(0, Math.min(slides.length - 1, (parseInt((location.hash.match(/folie-(\d+)/) || [])[1]) || 1) - 1));
-cur = start; world.style.transform = cam(cur); slides[cur].classList.add('active'); ui(); onEnter(slides[cur]);
+cur = start; slides[cur].classList.add('active'); ui(); onEnter(slides[cur]);
 })();
 </script>
+<script src="lib/models3d.js"></script>
