@@ -1,0 +1,594 @@
+<title>Das Auge und die Brille</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: a fixed 1280x720 stage scaled to the window; one slide visible, notes panel slides up from the bottom. Single dark theme on purpose (projector). */
+:root{
+  --bg:#060c13; --panel:#0e1925; --panel2:#132232; --line:#22384b;
+  --ink:#eaf2f8; --muted:#8fa6b8;
+  --iris:#4fb3d9; --ray:#ffc94a; --hit:#4fd18b; --miss:#ff5d5d; --glass:#8fdcf5; --muscle:#e0707a; --retina:#f0a43a;
+  --display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
+  --body:'Atkinson Hyperlegible Next',ui-sans-serif,system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;font-family:var(--body)}
+#bgfx{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+#deck{position:fixed;inset:0;display:grid;place-items:center;z-index:1}
+#stage{width:1280px;height:720px;position:relative;flex:none}
+.slide{position:absolute;inset:0;padding:48px 64px 64px;box-sizing:border-box;visibility:hidden;opacity:0;display:flex;flex-direction:column;gap:18px}
+.slide.active{visibility:visible;opacity:1}
+/* transitions */
+.slide.focus-in{animation:focusIn .8s cubic-bezier(.2,.7,.2,1) both}
+.slide.focus-out{animation:focusOut .5s ease-in both;visibility:visible}
+@keyframes focusIn{from{opacity:0;filter:blur(24px);transform:scale(.94)}to{opacity:1;filter:blur(0);transform:none}}
+@keyframes focusOut{from{opacity:1;filter:blur(0)}to{opacity:0;filter:blur(24px);transform:scale(1.06)}}
+.slide.iris-in{animation:irisIn .9s cubic-bezier(.6,0,.2,1) both}
+@keyframes irisIn{from{clip-path:circle(0% at 50% 50%)}to{clip-path:circle(80% at 50% 50%)}}
+#lids{position:fixed;inset:0;pointer-events:none;z-index:50}
+#lids div{position:absolute;left:-5%;width:110%;height:52%;background:#000;transition:transform .22s ease-in}
+#lidT{top:0;transform:translateY(-102%);border-radius:0 0 50% 50%/0 0 30% 30%}
+#lidB{bottom:0;transform:translateY(102%);border-radius:50% 50% 0 0/30% 30% 0 0}
+#lids.closed div{transform:none}
+/* type */
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+h2{font-size:44px;line-height:1.05;letter-spacing:-.01em}
+h3{font-size:22px;color:var(--iris)}
+.kicker{font:600 15px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--ray)}
+p,li{font-size:21px;line-height:1.4;margin:0}
+ul{margin:0;padding-left:22px;display:grid;gap:6px}
+b{color:var(--ray);font-weight:700}
+.term{color:var(--glass);font-weight:700}
+.muted{color:var(--muted)}
+.row{display:flex;gap:24px;min-height:0;flex:1}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(6px)}
+.memo{border-left:4px solid var(--ray);background:color-mix(in srgb,var(--ray) 10%,var(--panel));padding:10px 16px;border-radius:0 12px 12px 0;font-size:21px}
+.memo b{color:var(--ink)}
+svg{display:block;overflow:visible}
+svg text{fill:var(--ink);font-family:var(--body);font-size:13px}
+.btn{font:600 17px var(--body);color:var(--bg);background:var(--iris);border:0;border-radius:999px;padding:9px 18px;cursor:pointer}
+.btn.alt{background:transparent;color:var(--iris);border:2px solid var(--iris)}
+.btn:focus-visible{outline:3px solid var(--ray);outline-offset:2px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+/* fragments */
+.f{opacity:0;transform:translateY(14px);filter:blur(8px);transition:opacity .5s,transform .5s,filter .5s}
+.f.show{opacity:1;transform:none;filter:none}
+/* rays */
+.ray{fill:none;stroke:var(--ray);stroke-width:2.2;stroke-linecap:round;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--ray) 70%,transparent))}
+.ray.dash{stroke-dasharray:5 5;opacity:.7;filter:none}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.4s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.eyeball{fill:var(--panel2);stroke:#c9d6e0;stroke-width:2}
+.retina{fill:none;stroke:var(--retina);stroke-width:5;stroke-linecap:round}
+.lens{fill:color-mix(in srgb,var(--glass) 35%,transparent);stroke:var(--glass);stroke-width:1.5}
+.dot-hit{fill:var(--hit);filter:drop-shadow(0 0 6px var(--hit))}
+.dot-miss{fill:var(--miss);filter:drop-shadow(0 0 6px var(--miss))}
+.blurbar{stroke:var(--miss);stroke-width:7;stroke-linecap:round;opacity:.85}
+.axis{stroke:var(--line);stroke-dasharray:3 5}
+/* chrome */
+#hud{position:fixed;left:0;right:0;bottom:0;height:4px;background:#ffffff14;z-index:20}
+#bar{height:100%;width:0;background:linear-gradient(90deg,var(--iris),var(--ray));transition:width .5s}
+#count{position:fixed;right:16px;bottom:12px;font:600 13px var(--body);color:var(--muted);z-index:20;letter-spacing:.08em}
+#notes{position:fixed;left:0;right:0;bottom:0;max-height:42vh;overflow:auto;background:#0b1520f2;border-top:2px solid var(--ray);padding:16px max(20px,env(safe-area-inset-left,0px)) 24px;z-index:40;transform:translateY(105%);transition:transform .3s;font-size:18px;line-height:1.5}
+#notes.open{transform:none}
+#notes .who{color:var(--ray);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:14px}
+#help{position:fixed;left:16px;bottom:12px;font-size:13px;color:var(--muted);z-index:20}
+.notes{display:none}
+/* title eye */
+#bigeye .white{fill:#f4f8fb}
+#bigeye{filter:drop-shadow(0 0 40px #4fb3d955)}
+.blink{animation:blink 5s infinite;transform-origin:center;transform-box:fill-box}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.06)}}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:999px;border:1px solid var(--line);font-weight:600;font-size:17px;transition:all .25s;background:var(--panel)}
+.chip.lit{background:var(--ray);color:var(--bg);border-color:var(--ray);box-shadow:0 0 18px var(--ray)}
+.lbl{opacity:0;animation:lblIn .5s ease-out forwards}
+@keyframes lblIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.pulse{stroke-dasharray:10 18;animation:flow 1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-28}}
+table{border-collapse:collapse;width:100%;font-size:20px}
+th,td{padding:10px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-family:var(--display);color:var(--muted);font-weight:500;font-size:16px;letter-spacing:.06em;text-transform:uppercase}
+input[type=range]{width:100%;accent-color:var(--ray)}
+.big{font:700 34px var(--display);color:var(--ray);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+</style>
+
+<canvas id="bgfx" aria-hidden="true"></canvas>
+<div id="deck"><div id="stage">
+
+<!-- 1 TITEL -->
+<section class="slide" data-tr="iris" data-name="Start">
+  <div class="row" style="align-items:center">
+    <div class="col" style="flex:1.1;gap:20px">
+      <div class="kicker">Physik · Optik</div>
+      <h1 style="font-size:82px;line-height:.95;letter-spacing:-.02em">Das Auge<br>und die Brille</h1>
+      <p class="muted" style="font-size:26px">Wie aus Licht ein Bild wird – und wie eine Brille Unschärfe repariert.</p>
+      <div class="chips" style="margin-top:8px"><span class="chip">Aufbau</span><span class="chip">Vom Licht zum Sehen</span><span class="chip">Kurz- &amp; Weitsichtigkeit</span><span class="chip">Brille</span></div>
+    </div>
+    <div class="col" style="flex:1;align-items:center">
+      <svg id="bigeye" viewBox="-230 -150 460 300" width="520">
+        <defs>
+          <radialGradient id="irisG"><stop offset="0" stop-color="#0b2733"/><stop offset=".35" stop-color="#1f7fa6"/><stop offset=".75" stop-color="#4fb3d9"/><stop offset="1" stop-color="#123a4d"/></radialGradient>
+          <clipPath id="almond"><path d="M-210 0 Q0 -150 210 0 Q0 150 -210 0Z"/></clipPath>
+        </defs>
+        <g class="blink">
+          <path class="white" d="M-210 0 Q0 -150 210 0 Q0 150 -210 0Z"/>
+          <g clip-path="url(#almond)"><g id="irisGrp">
+            <circle r="78" fill="url(#irisG)"/>
+            <g stroke="#9fe3ff" stroke-opacity=".25" stroke-width="1.2" id="irisLines"></g>
+            <circle id="bigPupil" r="32" fill="#03070b"/>
+            <circle cx="-22" cy="-24" r="11" fill="#fff" opacity=".85"/>
+          </g></g>
+          <path d="M-210 0 Q0 -150 210 0 Q0 150 -210 0Z" fill="none" stroke="#0a1118" stroke-width="6"/>
+        </g>
+      </svg>
+      <p class="muted" style="font-size:15px">Bewegt die Maus – das Auge schaut mit.</p>
+    </div>
+  </div>
+  <aside class="notes"><div class="who">Person A · ca. 40 s</div>
+  „Hallo! Unser Thema ist das Auge und die Brille. Kurze Frage: Hand hoch, wer eine Brille oder Kontaktlinsen trägt? [kurz warten, kommentieren] Fast zwei von drei Erwachsenen in Deutschland tragen eine Brille. Aber wie funktioniert das eigentlich? Wir folgen heute einem Lichtstrahl: erst durch das Auge, dann ins Gehirn. Danach schauen wir, was bei Kurz- und Weitsichtigkeit schiefgeht – und wie eine Brille das repariert.“</aside>
+</section>
+
+<!-- 2 AUFBAU + LICHTWEG -->
+<section class="slide" data-tr="blink" data-name="Aufbau des Auges">
+  <div class="kicker">1 · Aufbau des Auges</div>
+  <h2>Welche Teile hat das Auge – und welchen Weg nimmt das Licht?</h2>
+  <div class="row">
+    <svg id="anatomy" viewBox="0 0 700 430" style="flex:1.45;min-width:0">
+      <line x1="0" y1="215" x2="560" y2="215" class="axis"/>
+      <circle cx="380" cy="215" r="175" class="eyeball"/>
+      <path d="M392 -0" fill="none"/>
+      <!-- glaskörper tint -->
+      <circle cx="390" cy="215" r="150" fill="#1b3448" opacity=".55"/>
+      <!-- retina -->
+      <path class="retina" d="M 471 85 A 160 160 0 0 1 471 345"/>
+      <!-- optic nerve -->
+      <path d="M548 238 L690 262 L690 300 L540 268Z" fill="#e8c46a" opacity=".85"/>
+      <!-- cornea -->
+      <path d="M232 120 Q160 215 232 310" fill="none" stroke="var(--glass)" stroke-width="5"/>
+      <!-- iris -->
+      <line x1="248" y1="135" x2="248" y2="190" stroke="#3aa0c8" stroke-width="9"/>
+      <line x1="248" y1="240" x2="248" y2="295" stroke="#3aa0c8" stroke-width="9"/>
+      <!-- ciliary + zonula -->
+      <ellipse cx="262" cy="125" rx="12" ry="18" fill="var(--muscle)"/>
+      <ellipse cx="262" cy="305" rx="12" ry="18" fill="var(--muscle)"/>
+      <g stroke="#cfe6f2" stroke-width="1" opacity=".8"><line x1="266" y1="140" x2="280" y2="172"/><line x1="272" y1="138" x2="286" y2="170"/><line x1="266" y1="290" x2="280" y2="258"/><line x1="272" y1="292" x2="286" y2="260"/></g>
+      <!-- lens -->
+      <ellipse id="anaLens" cx="283" cy="215" rx="20" ry="46" class="lens"/>
+      <!-- fovea + blind spot -->
+      <circle cx="540" cy="215" r="6" fill="var(--ray)"/>
+      <circle cx="546" cy="252" r="6" fill="#111" stroke="#e8c46a" stroke-width="2"/>
+      <!-- photon -->
+      <circle id="photon" cx="-20" cy="200" r="8" fill="#fff" style="filter:drop-shadow(0 0 10px var(--ray)) drop-shadow(0 0 20px var(--ray))"/>
+      <!-- labels -->
+      <g class="labels" stroke="var(--muted)" stroke-width="1">
+        <g class="lbl" style="animation-delay:.2s"><line x1="190" y1="160" x2="120" y2="95"/><text x="20" y="88">Hornhaut (Cornea)</text></g>
+        <g class="lbl" style="animation-delay:.4s"><line x1="246" y1="150" x2="200" y2="40"/><text x="140" y="32">Iris (Regenbogenhaut)</text></g>
+        <g class="lbl" style="animation-delay:.6s"><line x1="250" y1="215" x2="150" y2="250"/><text x="60" y="262">Pupille</text></g>
+        <g class="lbl" style="animation-delay:.8s"><line x1="290" y1="250" x2="230" y2="372"/><text x="170" y="390">Linse</text></g>
+        <g class="lbl" style="animation-delay:1s"><line x1="262" y1="320" x2="300" y2="415"/><text x="250" y="428">Ziliarmuskel</text></g>
+        <g class="lbl" style="animation-delay:1.2s"><line x1="278" y1="150" x2="330" y2="20"/><text x="300" y="12">Zonulafasern</text></g>
+        <g class="lbl" style="animation-delay:1.4s"><text x="360" y="160" fill="var(--muted)">Glaskörper</text></g>
+        <g class="lbl" style="animation-delay:1.6s"><line x1="520" y1="100" x2="560" y2="40"/><text x="520" y="32">Netzhaut (Retina)</text></g>
+        <g class="lbl" style="animation-delay:1.8s"><line x1="540" y1="208" x2="600" y2="150"/><text x="560" y="140">Gelber Fleck (Fovea)</text></g>
+        <g class="lbl" style="animation-delay:2s"><line x1="552" y1="258" x2="600" y2="340"/><text x="560" y="358">Blinder Fleck</text></g>
+        <g class="lbl" style="animation-delay:2.2s"><text x="610" y="320">Sehnerv</text></g>
+        <g class="lbl" style="animation-delay:2.4s"><line x1="420" y1="388" x2="460" y2="418"/><text x="440" y="432">Lederhaut (Sklera)</text></g>
+      </g>
+    </svg>
+    <div class="col" style="flex:1">
+      <div class="card">
+        <h3>Der Weg des Lichts</h3>
+        <div class="chips" id="pathChips"><span class="chip">Hornhaut</span><span class="chip">Kammerwasser</span><span class="chip">Pupille</span><span class="chip">Linse</span><span class="chip">Glaskörper</span><span class="chip">Netzhaut</span></div>
+        <div class="btns"><button class="btn" id="photonBtn" type="button">Licht losschicken</button></div>
+      </div>
+      <div class="memo">Eselsbrücke: <b>H</b>unde <b>K</b>önnen <b>P</b>rima <b>L</b>aufen, <b>G</b>urken <b>N</b>icht.</div>
+      <p class="muted" style="font-size:18px">Alles auf dem Weg ist durchsichtig. Das Auge ist etwa 2,4 cm groß – so breit wie eine 2-Euro-Münze.</p>
+    </div>
+  </div>
+  <aside class="notes"><div class="who">Person A · ca. 1 min</div>
+  „Das Auge ist ungefähr so groß wie eine 2-Euro-Münze. Ganz vorne ist die <b>Hornhaut</b>, auf Latein <b>Cornea</b> – das durchsichtige Fenster. Das Weiße außen ist die <b>Lederhaut</b>. Dahinter liegt die <b>Iris</b>, der farbige Ring, und in der Mitte das Loch: die <b>Pupille</b>. Hinter der Pupille hängt die <b>Linse</b> an feinen Fäden, den <b>Zonulafasern</b>. Um die Linse liegt ein Ringmuskel, der <b>Ziliarmuskel</b>. Innen ist ein durchsichtiges Gel, der <b>Glaskörper</b>. Hinten liegt die <b>Netzhaut</b>, die Retina – der Bildsensor. Dort ist der <b>gelbe Fleck</b>, wo wir am schärfsten sehen, und der <b>blinde Fleck</b>, wo der <b>Sehnerv</b> rausgeht.<br>[Button drücken] Das Licht geht so: Hornhaut, Kammerwasser, Pupille, Linse, Glaskörper, Netzhaut. Eselsbrücke: Hunde Können Prima Laufen, Gurken Nicht.“</aside>
+</section>
+
+<!-- 3 AUFGABEN + AKKOMMODATION -->
+<section class="slide" data-tr="focus" data-name="Aufgaben & Scharfstellen">
+  <div class="kicker">1 · Aufbau des Auges</div>
+  <h2>Wer macht was – und wie stellt das Auge scharf?</h2>
+  <div class="row">
+    <div class="col" style="flex:1">
+      <div class="card"><h3>Hornhaut</h3><p>Schützt das Auge und knickt das Licht <b>am stärksten</b> – etwa ⅔ der ganzen Brechkraft.</p></div>
+      <div class="card" style="flex-direction:row;gap:14px;align-items:center">
+        <div style="flex:1;display:grid;gap:8px"><h3>Iris &amp; Pupille</h3><p>Die Iris ist ein Muskel und regelt, wie viel Licht reinkommt – wie die Blende einer Kamera. Die Pupille ist nur das Loch (2–8 mm).</p></div>
+        <div style="display:grid;gap:8px;justify-items:center">
+          <svg viewBox="-50 -50 100 100" width="96"><circle r="46" fill="url(#irisG)"/><circle id="miniPupil" r="20" fill="#03070b" style="transition:r .6s"/></svg>
+          <button class="btn alt" id="lightBtn" type="button" style="font-size:14px;padding:6px 12px">Licht an</button>
+        </div>
+      </div>
+      <div class="card"><h3>Linse</h3><p>Die <b>Feineinstellung</b>: Sie ist weich und kann ihre Form ändern.</p></div>
+    </div>
+    <div class="col" style="flex:1.25">
+      <div class="card" style="flex:1">
+        <h3>Scharfstellen = <span class="term">Akkommodation</span></h3>
+        <svg id="accom" viewBox="0 0 460 220" style="max-height:200px"></svg>
+        <div class="btns"><button class="btn" id="farBtn" type="button">Ferne</button><button class="btn alt" id="nearBtn" type="button">Nähe</button></div>
+        <p id="accomTxt" style="font-size:19px"></p>
+      </div>
+      <div class="memo"><b>Ferne = Faulenzen</b> (Muskel locker, Linse flach) · <b>Nähe = Muskelarbeit</b> (Linse rund)</div>
+    </div>
+  </div>
+  <aside class="notes"><div class="who">Person A · ca. 1 min 15 s</div>
+  „Jedes Teil hat einen Job. Die <b>Hornhaut</b> schützt und knickt das Licht am stärksten – etwa zwei Drittel der Arbeit. Die <b>Iris</b> regelt die Lichtmenge wie eine Kamerablende. [Licht-Button] Bei Helligkeit wird die Pupille klein, im Dunkeln groß. Die <b>Linse</b> macht die Feineinstellung.<br>
+  Eine Kamera stellt scharf, indem sie die Linse verschiebt. Das Auge <b>verformt</b> die Linse – das heißt <b>Akkommodation</b>. [Ferne] Schaut man in die Ferne, ist der Ziliarmuskel entspannt, die Zonulafasern sind straff und ziehen die Linse flach. Flache Linse = schwache Brechung. [Nähe] Schaut man auf etwas Nahes, spannt sich der Ziliarmuskel an, der Ring wird enger, die Fasern werden locker und die Linse wird von selbst runder. Runde Linse = starke Brechung. Merksatz: Ferne heißt Faulenzen. – Was hinten auf der Netzhaut passiert, erklärt euch jetzt [Name B].“</aside>
+</section>
+
+<!-- 4 VOM LICHT ZUM SEHEN -->
+<section class="slide" data-tr="blink" data-name="Vom Licht zum Sehen">
+  <div class="kicker">2 · Vom Licht zum Sehen</div>
+  <h2>Wie aus Licht ein Bild im Kopf wird</h2>
+  <div class="row">
+    <div class="card" style="flex:1.15">
+      <h3>① Das Bild auf der Netzhaut steht Kopf</h3>
+      <svg id="invert" viewBox="0 0 440 210"></svg>
+      <p style="font-size:19px">Licht läuft geradeaus. Die Strahlen <b>kreuzen sich</b> in der Linse: oben landet unten. Das Bild ist <b>umgekehrt, seitenverkehrt und verkleinert</b> – wie bei einer Lochkamera.</p>
+    </div>
+    <div class="col" style="flex:1">
+      <div class="card f">
+        <h3>② Netzhaut: Licht → Strom</h3>
+        <ul style="font-size:19px"><li><b>Stäbchen</b> (≈ 120 Mio.): hell/dunkel, auch nachts</li><li><b>Zapfen</b> (≈ 6 Mio.): Farben – rot, grün, blau</li><li>Licht ändert einen <span class="term">Sehfarbstoff</span> → chemische Kettenreaktion → <b>elektrisches Signal</b></li></ul>
+      </div>
+      <div class="card f" style="flex:1">
+        <h3>③ Das Gehirn macht daraus Sehen</h3>
+        <svg viewBox="0 0 420 70" style="width:100%"><circle cx="30" cy="35" r="22" class="eyeball"/><circle cx="16" cy="35" r="7" fill="var(--iris)"/><path d="M52 35 C150 35 200 10 330 30" fill="none" stroke="#e8c46a" stroke-width="5" class="pulse"/><text x="120" y="66" fill="var(--muted)">Sehnerv → Sehnervenkreuzung</text><ellipse cx="370" cy="32" rx="44" ry="30" fill="#e98fa0" opacity=".85"/><text x="342" y="37" style="fill:#3a0d16;font-weight:700">Sehrinde</text></svg>
+        <ul style="font-size:19px"><li>Deutet das umgedrehte Bild richtig (gelernt!)</li><li>Setzt beide Augen zu <b>3D</b> zusammen, füllt den blinden Fleck</li><li>Vergleicht mit dem Gedächtnis → wir <b>erkennen</b></li></ul>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><div class="who">Person B · ca. 2 min</div>
+  „Danke! Das Bild entsteht auf der <b>Netzhaut</b>, am schärfsten im <b>gelben Fleck</b>. Und jetzt das Verrückte: Es steht <b>auf dem Kopf</b>! Licht läuft geradeaus. Ein Strahl von der Spitze geht durch die Mitte der Linse und landet unten. Ein Strahl von unten landet oben. Die Strahlen kreuzen sich – wie bei einer Lochkamera. Physiker sagen: ein reelles, umgekehrtes, verkleinertes Bild.<br>
+  [weiter] Damit wir sehen, braucht es Signale. In der Netzhaut sitzen Sinneszellen: etwa 120 Millionen <b>Stäbchen</b> für hell und dunkel und etwa 6 Millionen <b>Zapfen</b> für Farben – für Rot, Grün und Blau. Trifft Licht auf den <b>Sehfarbstoff</b>, ändert ein Molekül seine Form. Das startet eine Kettenreaktion, am Ende entsteht ein elektrisches Signal. Lichtenergie wird zu elektrischer Energie. Nachts arbeiten fast nur die Stäbchen – deshalb sehen wir im Dunkeln kaum Farben.<br>
+  [weiter] Über den <b>Sehnerv</b>, rund eine Million Fasern, gehen die Signale über die <b>Sehnervenkreuzung</b> zur <b>Sehrinde</b> im Hinterkopf. Dort passiert das eigentliche Sehen: Das Gehirn hat gelernt, das umgedrehte Bild richtig zu deuten, setzt beide Augen zu 3D zusammen, füllt den blinden Fleck auf und vergleicht mit dem Gedächtnis. Erst dann wissen wir: Das ist ein Baum. Was passiert, wenn das Bild unscharf ist, erklärt [Name C].“</aside>
+</section>
+
+<!-- 5 KURZ & WEIT -->
+<section class="slide" data-tr="blink" data-name="Kurz- & Weitsichtigkeit">
+  <div class="kicker">3 · Kurz- und Weitsichtigkeit</div>
+  <h2>Wo treffen sich die Strahlen ohne Brille?</h2>
+  <div class="row" style="gap:16px">
+    <div class="card" style="flex:1"><h3>Normal</h3><svg class="rd" data-r="365" viewBox="0 0 460 220"></svg><p style="font-size:18px">Treffpunkt <b style="color:var(--hit)">genau auf</b> der Netzhaut → scharf</p></div>
+    <div class="card f" style="flex:1"><h3>Kurzsichtig</h3><svg class="rd" data-r="405" viewBox="0 0 460 220"></svg><p style="font-size:18px"><b>Ferne</b> unscharf (Tafel). Treffpunkt <b style="color:var(--miss)">vor</b> der Netzhaut. Auge <b>zu lang</b> oder Brechkraft zu stark.</p></div>
+    <div class="card f" style="flex:1"><h3>Weitsichtig</h3><svg class="rd" data-r="325" viewBox="0 0 460 220"></svg><p style="font-size:18px"><b>Nähe</b> unscharf (Handy). Treffpunkt <b style="color:var(--miss)">hinter</b> der Netzhaut. Auge <b>zu kurz</b> oder Brechkraft zu schwach.</p></div>
+  </div>
+  <div class="memo f">Auf der Netzhaut kommt statt eines Punktes ein <b>Fleck</b> an (Unschärfekreis). Schon <b>1 mm</b> zu langes Auge ≈ <b>3 Dioptrien</b> kurzsichtig.</div>
+  <aside class="notes"><div class="who">Person C · ca. 1 min 45 s</div>
+  „Bei vielen Menschen landet das Bild nicht scharf auf der Netzhaut. Licht von weit weg kommt fast parallel ins Auge. Beim gesunden Auge treffen sich die Strahlen genau auf der Netzhaut – grüner Punkt, scharf.<br>
+  [weiter] <b>Kurzsichtige</b> sehen nah gut, aber in der Ferne unscharf – zum Beispiel die Tafel. Die Strahlen treffen sich zu früh, <b>vor</b> der Netzhaut, und laufen dann wieder auseinander. Meistens ist der Augapfel <b>zu lang</b> oder die Brechkraft zu stark.<br>
+  [weiter] <b>Weitsichtige</b> sehen in der Ferne gut, aber nah unscharf – zum Beispiel das Handy. Die Strahlen würden sich erst <b>hinter</b> der Netzhaut treffen. Der Augapfel ist <b>zu kurz</b> oder die Brechkraft zu schwach.<br>
+  [weiter] In beiden Fällen kommt statt eines Punktes ein Fleck an – der <b>Unschärfekreis</b>. Und es geht um winzige Unterschiede: Ist das Auge nur einen Millimeter zu lang, ist man schon etwa drei Dioptrien kurzsichtig. Was Dioptrien sind, erklärt [Name D].“</aside>
+</section>
+
+<!-- 6 BRECHUNG, LINSEN, DIOPTRIEN -->
+<section class="slide" data-tr="focus" data-name="Brechung & Linsen">
+  <div class="kicker">4 · Wie funktioniert eine Brille?</div>
+  <h2>Brechung, Linsen und Dioptrien</h2>
+  <div class="row">
+    <div class="col" style="flex:1">
+      <div class="card">
+        <h3>Warum knickt Licht im Glas ab?</h3>
+        <svg id="refr" viewBox="0 0 400 170" style="max-height:170px"></svg>
+        <p style="font-size:18px">In Glas ist Licht <b>langsamer</b> (≈ 200 000 statt 300 000 km/s). Trifft es schräg auf, wird eine Seite zuerst gebremst → der Strahl <b>knickt ab</b> = <span class="term">Brechung</span>. Wie ein Auto, das schräg auf eine Wiese fährt.</p>
+      </div>
+      <div class="memo">Licht wird immer zur <b>dickeren</b> Stelle des Glases hin geknickt.</div>
+    </div>
+    <div class="card" style="flex:1.2">
+      <h3>Brechkraft in <span class="term">Dioptrien</span>: D = 1 / f</h3>
+      <svg id="dioSvg" viewBox="0 0 460 220"></svg>
+      <input type="range" id="dio" min="-5" max="5" step="0.5" value="2.5" aria-label="Dioptrien">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+        <span class="big" id="dioVal">+2,5 dpt</span><span id="dioTxt" style="font-size:18px;text-align:right"></span>
+      </div>
+      <p class="muted" style="font-size:16px"><b>Plus</b> = Sammellinse (Mitte dick, konvex) · <b>Minus</b> = Zerstreuungslinse (Rand dick, konkav) · Ganzes Auge ≈ 60 dpt</p>
+    </div>
+  </div>
+  <aside class="notes"><div class="who">Person D · ca. 2 min</div>
+  „Danke! Eine Brille funktioniert durch <b>Brechung</b>: Licht knickt ab, wenn es von Luft in Glas geht. Der Grund: In Glas ist Licht langsamer – etwa 200.000 statt 300.000 Kilometer pro Sekunde. Stellt euch ein Auto vor, das schräg von der Straße auf eine Wiese fährt. Das Rad, das zuerst ins Gras kommt, wird langsamer – das Auto dreht sich. Genau so knickt der Lichtstrahl.<br>
+  Eine Linse nutzt das gezielt. [Regler auf Plus] Die <b>Sammellinse</b> ist in der Mitte dick, man sagt <b>konvex</b>. Parallele Strahlen treffen sich im <b>Brennpunkt</b>. Der Abstand dahin ist die <b>Brennweite</b>. [Regler auf Minus] Die <b>Zerstreuungslinse</b> ist am Rand dick, <b>konkav</b>. Sie lässt Strahlen auseinanderlaufen, als kämen sie von einem Punkt vor der Linse.<br>
+  Auf dem Brillenpass steht zum Beispiel minus 2,5. Die Einheit ist die <b>Dioptrie</b>: Brechkraft gleich 1 durch Brennweite in Metern. Plus heißt Sammellinse, Minus heißt Zerstreuungslinse, und je größer die Zahl, desto stärker das Glas. Das ganze Auge hat ungefähr 60 Dioptrien.“</aside>
+</section>
+
+<!-- 7 KORREKTUR -->
+<section class="slide" data-tr="iris" data-name="Die Brille korrigiert">
+  <div class="kicker">4 · Wie wird das Bild wieder scharf?</div>
+  <h2>Die Brille schiebt den Treffpunkt auf die Netzhaut</h2>
+  <div class="row" style="gap:16px">
+    <div class="card" style="flex:1"><h3>Kurzsichtig → <span style="color:var(--miss)">Minusglas</span></h3><svg class="cd" data-r="405" viewBox="0 0 460 220"></svg><p style="font-size:18px">Die <b>Zerstreuungslinse</b> spreizt die Strahlen vorher etwas → sie treffen sich <b>später</b>, genau auf der Netzhaut.</p></div>
+    <div class="card" style="flex:1"><h3>Weitsichtig → <span style="color:var(--hit)">Plusglas</span></h3><svg class="cd" data-r="325" viewBox="0 0 460 220"></svg><p style="font-size:18px">Die <b>Sammellinse</b> bündelt die Strahlen vorher etwas → sie treffen sich <b>früher</b>, genau auf der Netzhaut.</p></div>
+  </div>
+  <div style="display:flex;gap:16px;align-items:center;justify-content:space-between">
+    <button class="btn" id="glassBtn" type="button">Brille aufsetzen</button>
+    <div class="memo" style="flex:1"><b>Kurz – Konkav – Minus</b> · <b>Weit – Wölbung – Plus</b></div>
+  </div>
+  <aside class="notes"><div class="who">Person D · ca. 1 min 30 s</div>
+  „Jetzt bringen wir alles zusammen. Ohne Brille seht ihr die roten Treffpunkte: beim Kurzsichtigen vor, beim Weitsichtigen hinter der Netzhaut. [Brille aufsetzen] Das kurzsichtige Auge bricht zu stark. Also braucht es eine <b>Zerstreuungslinse</b>, ein Minusglas. Sie spreizt die Strahlen schon vor dem Auge ein bisschen – dadurch treffen sie sich später, genau auf der Netzhaut. Das weitsichtige Auge bricht zu schwach. Also braucht es eine <b>Sammellinse</b>, ein Plusglas. Sie bündelt die Strahlen vorher schon etwas – dadurch treffen sie sich früher, genau auf der Netzhaut. Brille und Auge zusammen haben dann genau die richtige Brechkraft.<br>
+  Tipp zum Selbertesten: Haltet eine Brille über einen Text. Wird die Schrift größer, ist es ein Plusglas. Wird sie kleiner, ein Minusglas. Merksatz: Kurz – konkav – Minus. Weit – Wölbung – Plus.“</aside>
+</section>
+
+<!-- 8 ZUSAMMENFASSUNG -->
+<section class="slide" data-tr="blink" data-name="Zusammenfassung">
+  <div class="kicker">Zusammenfassung</div>
+  <h2>Das Wichtigste in 30 Sekunden</h2>
+  <table>
+    <tr><th></th><th>Kurzsichtig (Myopie)</th><th>Weitsichtig (Hyperopie)</th></tr>
+    <tr><td class="muted">Unscharf</td><td>in der <b>Ferne</b></td><td>in der <b>Nähe</b></td></tr>
+    <tr><td class="muted">Treffpunkt ohne Brille</td><td><b>vor</b> der Netzhaut</td><td><b>hinter</b> der Netzhaut</td></tr>
+    <tr><td class="muted">Ursache</td><td>Auge zu lang / Brechkraft zu stark</td><td>Auge zu kurz / Brechkraft zu schwach</td></tr>
+    <tr><td class="muted">Brille</td><td>Zerstreuungslinse, konkav, <b>Minus</b></td><td>Sammellinse, konvex, <b>Plus</b></td></tr>
+  </table>
+  <div class="row" style="flex:0;align-items:center;margin-top:8px">
+    <p style="flex:1;font-size:20px">Hornhaut &amp; Linse bündeln das Licht → umgedrehtes Bild auf der Netzhaut → Stäbchen &amp; Zapfen machen Signale → das Gehirn macht daraus Sehen.</p>
+    <h1 style="font-size:64px;color:var(--ray)">Fragen?</h1>
+  </div>
+  <aside class="notes"><div class="who">Person B (oder alle) · ca. 45 s</div>
+  „Fassen wir zusammen: Hornhaut und Linse bündeln das Licht. Auf der Netzhaut entsteht ein umgedrehtes Bild. Stäbchen und Zapfen machen daraus elektrische Signale, und das Gehirn macht daraus, was wir sehen. Passen Augenlänge und Brechkraft nicht zusammen, wird es unscharf: Kurzsichtig heißt Treffpunkt vor der Netzhaut und Minusglas. Weitsichtig heißt Treffpunkt hinter der Netzhaut und Plusglas. Danke fürs Zuhören – habt ihr Fragen?“</aside>
+</section>
+
+</div></div>
+
+<div id="lids" aria-hidden="true"><div id="lidT"></div><div id="lidB"></div></div>
+<div id="notes" aria-live="polite"></div>
+<div id="hud"><div id="bar"></div></div>
+<div id="count"></div>
+<div id="help">→ / Leertaste weiter · ← zurück · F Vollbild · N Sprechertext</div>
+
+<script>
+(() => {
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+/* ---------- scaling ---------- */
+const stage = $('#stage');
+function fit() { const s = Math.min(innerWidth / 1280, innerHeight / 720); stage.style.transform = `scale(${s})`; }
+addEventListener('resize', fit); fit();
+
+/* ---------- background photons ---------- */
+const cv = $('#bgfx'), cx = cv.getContext('2d'); let parts = [];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function resetBg() { cv.width = innerWidth; cv.height = innerHeight; parts = Array.from({ length: 70 }, () => ({ x: Math.random() * cv.width, y: Math.random() * cv.height, v: .3 + Math.random() * 1.2, l: 20 + Math.random() * 80, a: .05 + Math.random() * .18 })); }
+addEventListener('resize', resetBg); resetBg();
+(function loop() {
+  cx.clearRect(0, 0, cv.width, cv.height);
+  for (const p of parts) { const g = cx.createLinearGradient(p.x - p.l, p.y, p.x, p.y); g.addColorStop(0, 'rgba(255,201,74,0)'); g.addColorStop(1, `rgba(255,201,74,${p.a})`); cx.strokeStyle = g; cx.lineWidth = 1.5; cx.beginPath(); cx.moveTo(p.x - p.l, p.y); cx.lineTo(p.x, p.y); cx.stroke(); if (!reduce) { p.x += p.v; if (p.x - p.l > cv.width) { p.x = 0; p.y = Math.random() * cv.height; } } }
+  requestAnimationFrame(loop);
+})();
+
+/* ---------- paraxial ray tracer ---------- */
+// rays: [{y, u}] start at x0; elems: [{x, P}] thin lenses; ends at xEnd. Returns polylines + focus x.
+function trace(rays, x0, elems, xEnd) {
+  return rays.map(r => {
+    let x = x0, y = r.y, u = r.u; const pts = [[x, y]];
+    for (const e of elems) { y += u * (e.x - x); x = e.x; pts.push([x, y]); u -= y * e.P; }
+    const xf = u !== 0 ? x - y / u : Infinity;
+    const yEnd = y + u * (xEnd - x); pts.push([xEnd, yEnd]);
+    return { pts, xf, yEnd, xLast: x, yLast: y, u };
+  });
+}
+const path = pts => 'M' + pts.map(p => p[0].toFixed(1) + ' ' + (110 + p[1]).toFixed(1)).join(' L');
+function drawEye(svg, R, lensRx = 9, F = 190) {
+  const cxE = (F + R) / 2, rx = (R - F) / 2, ry = 86;
+  el('line', { x1: 0, y1: 110, x2: 460, y2: 110, class: 'axis' }, svg);
+  el('ellipse', { cx: cxE, cy: 110, rx, ry, class: 'eyeball' }, svg);
+  const a = 1.05, p1 = [cxE + rx * Math.cos(-a), 110 + ry * Math.sin(-a)], p2 = [cxE + rx * Math.cos(a), 110 + ry * Math.sin(a)];
+  el('path', { d: `M${p1} A${rx} ${ry} 0 0 1 ${p2}`, class: 'retina' }, svg);
+  el('path', { d: `M${F + 8} 62 Q${F - 14} 110 ${F + 8} 158`, fill: 'none', stroke: 'var(--glass)', 'stroke-width': 3 }, svg);
+  return el('ellipse', { cx: 215, cy: 110, rx: lensRx, ry: 32, class: 'lens' }, svg);
+}
+const PE = 1 / 150, E = 215, G = 115, X0 = 8;
+function renderRayDiagram(svg, R, glasses) {
+  svg.innerHTML = '';
+  drawEye(svg, R);
+  const elems = [];
+  if (glasses) {
+    const L = R - E, d = E - G, k = 1 - PE * L, Pg = k / (L + d * k);
+    elems.push({ x: G, P: Pg });
+    const shape = Pg < 0
+      ? `M${G - 11} 52 L${G + 11} 52 Q${G + 2} 110 ${G + 11} 168 L${G - 11} 168 Q${G - 2} 110 ${G - 11} 52Z`
+      : `M${G} 52 Q${G + 18} 110 ${G} 168 Q${G - 18} 110 ${G} 52Z`;
+    const g = el('path', { d: shape, class: 'lens' }, svg);
+    g.style.animation = 'lblIn .5s ease-out both';
+    const t = el('text', { x: G - 34, y: 190 }, svg); t.textContent = Pg < 0 ? 'Minusglas' : 'Plusglas';
+  }
+  elems.push({ x: E, P: PE });
+  const rays = trace([-40, -20, 20, 40].map(y => ({ y, u: 0 })), X0, elems, R - 2);
+  for (const r of rays) {
+    el('path', { d: path(r.pts), class: 'ray draw', pathLength: 1 }, svg);
+    if (r.xf > R + 1 && r.xf < 470) el('path', { d: path([[R - 2, r.yEnd], [r.xf, 0]]), class: 'ray dash' }, svg);
+  }
+  const xf = rays[0].xf, ys = rays.map(r => r.yEnd);
+  if (Math.abs(xf - R) < 4) el('circle', { cx: R - 3, cy: 110, r: 7, class: 'dot-hit' }, svg);
+  else {
+    el('line', { x1: R - 4, x2: R - 4, y1: 110 + Math.min(...ys), y2: 110 + Math.max(...ys), class: 'blurbar' }, svg);
+    el('circle', { cx: xf, cy: 110, r: 6, class: 'dot-miss' }, svg);
+  }
+}
+$$('.rd').forEach(s => renderRayDiagram(s, +s.dataset.r, false));
+let glassesOn = false;
+function renderCorrection() { $$('.cd').forEach(s => renderRayDiagram(s, +s.dataset.r, glassesOn)); $('#glassBtn').textContent = glassesOn ? 'Brille absetzen' : 'Brille aufsetzen'; }
+$('#glassBtn').onclick = () => { glassesOn = !glassesOn; renderCorrection(); };
+renderCorrection();
+
+/* ---------- accommodation ---------- */
+let near = false;
+function renderAccom() {
+  const svg = $('#accom'); svg.innerHTML = '';
+  const R = 365, lens = drawEye(svg, R, near ? 15 : 7);
+  // ciliary + zonula
+  for (const s of [-1, 1]) {
+    el('ellipse', { cx: 222, cy: 110 + s * (near ? 50 : 56), rx: near ? 10 : 7, ry: near ? 12 : 9, fill: 'var(--muscle)' }, svg);
+    el('line', { x1: 215, y1: 110 + s * 32, x2: 222, y2: 110 + s * (near ? 40 : 48), stroke: '#cfe6f2', 'stroke-width': near ? 1 : 2, 'stroke-dasharray': near ? '2 2' : 'none' }, svg);
+  }
+  const src = near ? 40 : null;
+  const rays = near ? [-28, -14, 14, 28].map(h => ({ y: 0, u: h / (E - src) })) : [-28, -14, 14, 28].map(y => ({ y, u: 0 }));
+  const P = near ? PE + 1 / (E - src) : PE;
+  const tr = trace(rays, near ? src : X0, [{ x: E, P }], R - 2);
+  tr.forEach(r => el('path', { d: path(r.pts), class: 'ray draw', pathLength: 1 }, svg));
+  el('circle', { cx: R - 3, cy: 110, r: 6, class: 'dot-hit' }, svg);
+  if (near) { el('circle', { cx: src, cy: 110, r: 7, fill: 'var(--ray)' }, svg); const t = el('text', { x: src - 30, y: 140 }, svg); t.textContent = 'nahes Ding'; }
+  else { const t = el('text', { x: 10, y: 200 }, svg); t.textContent = 'Licht von weit weg (parallel)'; }
+  $('#accomTxt').innerHTML = near
+    ? '<b>Nähe:</b> Ziliarmuskel <b>angespannt</b> → Zonulafasern <b>locker</b> → Linse <b>rund</b> → starke Brechung.'
+    : '<b>Ferne:</b> Ziliarmuskel <b>entspannt</b> → Zonulafasern <b>straff</b> → Linse <b>flach</b> → schwache Brechung.';
+  $('#farBtn').className = near ? 'btn alt' : 'btn'; $('#nearBtn').className = near ? 'btn' : 'btn alt';
+}
+$('#farBtn').onclick = () => { near = false; renderAccom(); };
+$('#nearBtn').onclick = () => { near = true; renderAccom(); };
+renderAccom();
+
+/* ---------- pupil ---------- */
+let bright = false;
+$('#lightBtn').onclick = () => {
+  bright = !bright; $('#miniPupil').setAttribute('r', bright ? 7 : 20);
+  $('#lightBtn').textContent = bright ? 'Licht aus' : 'Licht an';
+  document.body.style.transition = 'filter .6s'; document.body.style.filter = bright ? 'brightness(1.25)' : '';
+};
+
+/* ---------- inverted image ---------- */
+(function () {
+  const svg = $('#invert'); el('line', { x1: 0, y1: 105, x2: 440, y2: 105, class: 'axis' }, svg);
+  el('ellipse', { cx: 330, cy: 105, rx: 100, ry: 92, class: 'eyeball' }, svg);
+  el('path', { d: 'M 408 47 A 100 92 0 0 1 408 163', class: 'retina' }, svg);
+  el('ellipse', { cx: 245, cy: 105, rx: 8, ry: 30, class: 'lens' }, svg);
+  // object tree (upright) left, image tree (upside down, smaller) on the retina
+  const tree = el('g', {}, svg); el('rect', { x: 36, y: 75, width: 8, height: 40, fill: '#8a5a2b' }, tree); el('circle', { cx: 40, cy: 65, r: 26, fill: '#3fae5a' }, tree);
+  const im = el('g', {}, svg); el('rect', { x: 388, y: 98, width: 5, height: 28, fill: '#8a5a2b' }, im); el('circle', { cx: 391, cy: 134, r: 18, fill: '#3fae5a' }, im);
+  el('path', { d: 'M40 39 L245 105 L391 152', class: 'ray draw', pathLength: 1 }, svg);
+  el('path', { d: 'M40 115 L245 105 L391 98', class: 'ray draw', pathLength: 1, style: 'stroke:var(--glass)' }, svg);
+  const t = el('text', { x: 150, y: 205 }, svg); t.textContent = 'Bild auf der Netzhaut: Kopf unten';
+})();
+
+/* ---------- refraction ---------- */
+(function () {
+  const svg = $('#refr');
+  el('rect', { x: 150, y: 20, width: 110, height: 140, rx: 4, fill: 'color-mix(in srgb, var(--glass) 25%, transparent)', stroke: 'var(--glass)' }, svg);
+  el('line', { x1: 95, y1: 80, x2: 215, y2: 80, class: 'axis' }, svg);
+  const a = 35 * Math.PI / 180, b = Math.asin(Math.sin(a) / 1.5), ta = Math.tan(a), tb = Math.tan(b);
+  const hit = [150, 80], s0 = [40, 80 - 110 * ta], out = [260, 80 + 110 * tb], end = [320, out[1] + 60 * ta];
+  el('path', { d: `M${s0} L${hit} L${out} L${end}`, class: 'ray draw', pathLength: 1 }, svg);
+  const lab = (x, y, t, m) => { const e = el('text', { x, y }, svg); e.textContent = t; if (m) e.style.fill = 'var(--muted)'; };
+  lab(40, 150, 'Luft'); lab(188, 150, 'Glas'); lab(98, 74, 'Lot', 1); lab(272, 60, 'knickt zum', 1); lab(272, 76, 'Lot hin', 1);
+})();
+
+/* ---------- diopter slider ---------- */
+function renderDio() {
+  const D = +$('#dio').value, svg = $('#dioSvg'); svg.innerHTML = '';
+  const X = 200, P = D / 600;
+  el('line', { x1: 0, y1: 110, x2: 460, y2: 110, class: 'axis' }, svg);
+  const b = D * 3.2, e = 6 + Math.max(0, -D) * 2.2;
+  el('path', { d: `M${X - e} 30 Q${X - e - b} 110 ${X - e} 190 L${X + e} 190 Q${X + e + b} 110 ${X + e} 30Z`, class: 'lens' }, svg);
+  const tr = trace([-56, -28, 28, 56].map(y => ({ y, u: 0 })), 8, [{ x: X, P }], 455);
+  tr.forEach(r => {
+    el('path', { d: path(r.pts), class: 'ray' }, svg);
+    if (D < 0) el('path', { d: path([[X, r.yLast], [r.xf, 0]]), class: 'ray dash' }, svg);
+  });
+  let txt;
+  if (D === 0) txt = 'Keine Brechung – Fensterglas';
+  else {
+    const f = 1 / D, xf = X + 600 / D;
+    el('circle', { cx: xf, cy: 110, r: 6, class: D > 0 ? 'dot-hit' : 'dot-miss' }, svg);
+    const t = el('text', { x: xf - 6, y: 100 }, svg); t.textContent = 'F';
+    txt = (D > 0 ? '<b>Sammellinse</b>' : '<b>Zerstreuungslinse</b>') + ` · f = 1 / ${Math.abs(D).toString().replace('.', ',')} = ${(f * 100).toFixed(0)} cm`;
+  }
+  $('#dioVal').textContent = (D > 0 ? '+' : D < 0 ? '−' : '') + Math.abs(D).toFixed(1).replace('.', ',') + ' dpt';
+  $('#dioTxt').innerHTML = txt;
+}
+$('#dio').addEventListener('input', renderDio); renderDio();
+
+/* ---------- title eye follows pointer ---------- */
+(function () {
+  const lines = $('#irisLines'); for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2; el('line', { x1: Math.cos(a) * 34, y1: Math.sin(a) * 34, x2: Math.cos(a) * 76, y2: Math.sin(a) * 76 }, lines); }
+  const grp = $('#irisGrp'), eye = $('#bigeye');
+  addEventListener('pointermove', ev => {
+    const r = eye.getBoundingClientRect(); const dx = ev.clientX - (r.left + r.width / 2), dy = ev.clientY - (r.top + r.height / 2);
+    const d = Math.hypot(dx, dy) || 1, m = Math.min(1, d / 400);
+    grp.setAttribute('transform', `translate(${dx / d * 70 * m} ${dy / d * 30 * m})`);
+  });
+  let t = 0; (function breathe() { t += .02; $('#bigPupil').setAttribute('r', 30 + Math.sin(t) * 4); requestAnimationFrame(breathe); })();
+})();
+
+/* ---------- photon on anatomy ---------- */
+function runPhoton() {
+  const ph = $('#photon'), chips = $$('#pathChips .chip'); chips.forEach(c => c.classList.remove('lit'));
+  const stops = [[200, 0], [232, 1], [244, 2], [283, 3], [400, 4], [535, 5]];
+  const t0 = performance.now(), dur = 3200;
+  (function step(now) {
+    const k = Math.min(1, (now - t0) / dur), x = -20 + k * 560, y = 200 + (k > .45 ? (k - .45) / .55 * 15 : 0);
+    ph.setAttribute('cx', x); ph.setAttribute('cy', y);
+    for (const [sx, i] of stops) if (x >= sx) chips[i].classList.add('lit');
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+$('#photonBtn').onclick = runPhoton;
+
+/* ---------- deck engine ---------- */
+const slides = $$('.slide'); let cur = 0, busy = false;
+const notes = $('#notes');
+function frags(s) { return $$('.f', s); }
+function onEnter(s) {
+  // restart draw animations on the entered slide
+  $$('.draw, .lbl', s).forEach(p => { p.style.animation = 'none'; p.getBoundingClientRect(); p.style.animation = ''; });
+  if (s.querySelector('#photon')) setTimeout(runPhoton, 900);
+}
+function show(i, dir = 1) {
+  if (i < 0 || i >= slides.length || i === cur && slides[i].classList.contains('active')) return;
+  const from = slides[cur], to = slides[i], tr = dir > 0 ? to.dataset.tr : 'focus';
+  const swap = () => {
+    from.classList.remove('active', 'focus-in', 'iris-in'); to.classList.remove('focus-out');
+    to.classList.add('active'); cur = i; ui(); onEnter(to);
+  };
+  frags(to).forEach(f => f.classList.toggle('show', dir < 0));
+  if (reduce || from === to) { swap(); return; }
+  busy = true;
+  if (tr === 'blink') {
+    $('#lids').classList.add('closed');
+    setTimeout(() => { swap(); to.classList.add('focus-in'); setTimeout(() => $('#lids').classList.remove('closed'), 120); busy = false; }, 260);
+  } else if (tr === 'iris') {
+    from.classList.add('focus-out'); swap(); from.classList.add('focus-out'); to.classList.add('iris-in');
+    setTimeout(() => { from.classList.remove('focus-out'); busy = false; }, 600);
+  } else {
+    from.classList.add('focus-out');
+    setTimeout(() => { from.classList.remove('focus-out'); swap(); to.classList.add('focus-in'); busy = false; }, 380);
+  }
+}
+function next() {
+  if (busy) return; const f = frags(slides[cur]).find(x => !x.classList.contains('show'));
+  if (f) { f.classList.add('show'); $$('.draw', f).forEach(p => { p.style.animation = 'none'; p.getBoundingClientRect(); p.style.animation = ''; }); return; }
+  if (slides[cur].querySelector('#glassBtn') && !glassesOn) { glassesOn = true; renderCorrection(); return; }
+  show(cur + 1, 1);
+}
+function prev() {
+  if (busy) return; const sh = frags(slides[cur]).filter(x => x.classList.contains('show'));
+  if (sh.length) { sh[sh.length - 1].classList.remove('show'); return; }
+  show(cur - 1, -1);
+}
+function ui() {
+  $('#bar').style.width = ((cur + 1) / slides.length * 100) + '%';
+  $('#count').textContent = `${cur + 1} / ${slides.length} · ${slides[cur].dataset.name}`;
+  notes.innerHTML = slides[cur].querySelector('.notes')?.innerHTML || '';
+  try { location.hash = 'folie-' + (cur + 1); } catch (e) {}
+}
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') return; }
+  const k = e.key;
+  if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(k)) { if (k === ' ' || k === 'Enter') { if (e.target.tagName === 'BUTTON') return; } e.preventDefault(); next(); }
+  else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); prev(); }
+  else if (k === 'Home') show(0, -1); else if (k === 'End') show(slides.length - 1, 1);
+  else if (k === 'f' || k === 'F') { (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.())?.catch?.(() => {}); }
+  else if (k === 'n' || k === 'N') notes.classList.toggle('open');
+});
+let tx = null;
+addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+addEventListener('touchend', e => { if (tx == null) return; const d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 50) (d < 0 ? next : prev)(); tx = null; });
+const start = Math.max(0, Math.min(slides.length - 1, (parseInt((location.hash.match(/folie-(\d+)/) || [])[1]) || 1) - 1));
+cur = start; slides[cur].classList.add('active'); ui(); onEnter(slides[cur]);
+})();
+</script>
