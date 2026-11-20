@@ -16,8 +16,9 @@
 }
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;font-family:var(--body)}
 #bgfx{position:fixed;inset:0;width:100%;height:100%;z-index:0}
-#deck{position:fixed;inset:0;display:grid;place-items:center;z-index:1}
-#stage{width:1280px;height:720px;position:relative;flex:none}
+html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+#deck{position:fixed;inset:0;overflow:hidden;z-index:1}
+#stage{width:1280px;height:720px;position:absolute;left:50%;top:50%;transform-origin:50% 50%}
 .slide{position:absolute;inset:0;padding:48px 64px 64px;box-sizing:border-box;visibility:hidden;opacity:0;display:flex;flex-direction:column;gap:18px}
 .slide.active{visibility:visible;opacity:1}
 /* transitions */
@@ -97,11 +98,6 @@ input[type=range]{width:100%;accent-color:var(--ray)}
 /* ---------- cinematic product-page look ---------- */
 html,body{background:#000}
 .slide{isolation:isolate;overflow:hidden}
-.slide::after{content:attr(data-word);position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);z-index:-1;pointer-events:none;white-space:nowrap;
-  font:700 290px/1 var(--display);letter-spacing:-.05em;background:linear-gradient(95deg,#1c2733 10%,#56677a 45%,var(--glow) 75%,#fff 100%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;opacity:.2}
-.slide.active::after{animation:wordIn 1.6s cubic-bezier(.2,.8,.2,1) both}
-@keyframes wordIn{from{opacity:0;letter-spacing:.25em;filter:blur(24px)}to{opacity:.2;letter-spacing:-.05em;filter:none}}
 .slide::before{content:"";position:absolute;left:10%;right:10%;bottom:-35%;height:75%;z-index:-2;pointer-events:none;
   background:radial-gradient(ellipse at 50% 50%,color-mix(in srgb,var(--glow) 38%,transparent),transparent 68%);filter:blur(30px)}
 .slide.active::before{animation:glowIn 2s ease-out both}
@@ -169,7 +165,7 @@ h2 .w{display:inline-block;white-space:pre}
 <div id="deck"><div id="stage">
 
 <!-- 1 TITEL -->
-<section class="slide" data-tr="iris" data-name="Start" data-word="OPTIK" style="--glow:#4fb3d9">
+<section class="slide" data-tr="iris" data-name="Start" style="--glow:#4fb3d9">
   <div class="row" style="align-items:center">
     <div class="col" style="flex:1.1;gap:20px">
       <div class="kicker">Physik · Optik</div>
@@ -204,7 +200,7 @@ h2 .w{display:inline-block;white-space:pre}
 </section>
 
 <!-- 2 AUFBAU + LICHTWEG -->
-<section class="slide" data-tr="blink" data-name="Aufbau des Auges" data-word="AUGE" style="--glow:#4fb3d9">
+<section class="slide" data-tr="blink" data-name="Aufbau des Auges" style="--glow:#4fb3d9">
   <div class="kicker">1 · Aufbau des Auges</div>
   <h2>Welche Teile hat das Auge – und welchen Weg nimmt das Licht?</h2>
   <div class="row">
@@ -265,7 +261,7 @@ h2 .w{display:inline-block;white-space:pre}
 </section>
 
 <!-- 3 AUFGABEN + AKKOMMODATION -->
-<section class="slide" data-tr="cube" data-name="Aufgaben & Scharfstellen" data-word="FOKUS" style="--glow:#ff8a3d">
+<section class="slide" data-tr="cube" data-name="Aufgaben & Scharfstellen" style="--glow:#ff8a3d">
   <div class="kicker">1 · Aufbau des Auges</div>
   <h2>Wer macht was – und wie stellt das Auge scharf?</h2>
   <div class="row">
@@ -296,7 +292,7 @@ h2 .w{display:inline-block;white-space:pre}
 </section>
 
 <!-- 4 VOM LICHT ZUM SEHEN -->
-<section class="slide" data-tr="blink" data-name="Vom Licht zum Sehen" data-word="SEHEN" style="--glow:#b391e6">
+<section class="slide" data-tr="blink" data-name="Vom Licht zum Sehen" style="--glow:#b391e6">
   <div class="kicker">2 · Vom Licht zum Sehen</div>
   <h2>Wie aus Licht ein Bild im Kopf wird</h2>
   <div class="row">
@@ -325,7 +321,7 @@ h2 .w{display:inline-block;white-space:pre}
 </section>
 
 <!-- 5 KURZ & WEIT -->
-<section class="slide" data-tr="depth" data-name="Kurz- & Weitsichtigkeit" data-word="UNSCHARF" style="--glow:#ff5d5d">
+<section class="slide" data-tr="depth" data-name="Kurz- & Weitsichtigkeit" style="--glow:#ff5d5d">
   <div class="kicker">3 · Kurz- und Weitsichtigkeit</div>
   <h2>Wo treffen sich die Strahlen ohne Brille?</h2>
   <div class="row" style="gap:16px">
@@ -342,7 +338,7 @@ h2 .w{display:inline-block;white-space:pre}
 </section>
 
 <!-- 6 BRECHUNG, LINSEN, DIOPTRIEN -->
-<section class="slide" data-tr="cube" data-name="Brechung & Linsen" data-word="LINSE" style="--glow:#8fdcf5">
+<section class="slide" data-tr="cube" data-name="Brechung & Linsen" style="--glow:#8fdcf5">
   <div class="kicker">4 · Wie funktioniert eine Brille?</div>
   <h2>Brechung, Linsen und Dioptrien</h2>
   <div class="row">
@@ -372,7 +368,7 @@ h2 .w{display:inline-block;white-space:pre}
 </section>
 
 <!-- 7 KORREKTUR -->
-<section class="slide" data-tr="depth" data-name="Die Brille korrigiert" data-word="SCHARF" style="--glow:#4fd18b">
+<section class="slide" data-tr="depth" data-name="Die Brille korrigiert" style="--glow:#4fd18b">
   <div class="kicker">4 · Wie wird das Bild wieder scharf?</div>
   <h2>Die Brille schiebt den Treffpunkt auf die Netzhaut</h2>
   <div class="row" style="gap:16px">
@@ -389,7 +385,7 @@ h2 .w{display:inline-block;white-space:pre}
 </section>
 
 <!-- 8 ZUSAMMENFASSUNG -->
-<section class="slide" data-tr="blink" data-name="Zusammenfassung" data-word="KLAR" style="--glow:#ffc94a">
+<section class="slide" data-tr="blink" data-name="Zusammenfassung" style="--glow:#ffc94a">
   <div class="kicker">Zusammenfassung</div>
   <h2>Das Wichtigste in 30 Sekunden</h2>
   <table>
@@ -414,7 +410,7 @@ h2 .w{display:inline-block;white-space:pre}
 <div id="hud"><div id="bar"></div></div>
 <div id="count"></div>
 <div id="nav"><button id="notesBtn" class="wide" type="button">Text</button><button id="prevBtn" type="button" aria-label="Zurück">‹</button><button id="nextBtn" type="button" aria-label="Weiter">›</button></div>
-<div id="help">→ / Leertaste weiter · ← zurück · F Vollbild · N Sprechertext</div>
+
 
 <script src="lib/three.min.js"></script>
 <script>window.THREE || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>')</script>
@@ -426,8 +422,15 @@ const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS,
 
 /* ---------- scaling ---------- */
 const stage = $('#stage');
-function fit() { const s = Math.min(innerWidth / 1280, innerHeight / 720); stage.style.transform = `scale(${s})`; }
-addEventListener('resize', fit); fit();
+function fit() {
+  const vw = (window.visualViewport && visualViewport.width) || document.documentElement.clientWidth || innerWidth;
+  const vh = (window.visualViewport && visualViewport.height) || document.documentElement.clientHeight || innerHeight;
+  const s = Math.min(vw / 1280, vh / 720);
+  stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 300));
+if (window.visualViewport) visualViewport.addEventListener('resize', fit);
+fit();
 
 /* ---------- background photons ---------- */
 const cv = $('#bgfx'), cx = cv.getContext('2d'); let parts = [];
