@@ -2,263 +2,290 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
-/* Layout: one narrow column like a phone app. Mode "Abfragen" = one big flip card with Gewusst/Nochmal (active recall),
-   mode "Vortrag" = one short keyword card per slide. Person chips filter both. */
+/* Layout: one card per slide. Screen: 3D flip card (front = what to say, back = terms + questions). Print: front|back side by side, cut out and fold in the middle. */
 :root{
   --bg:#eef2f5; --card:#ffffff; --ink:#15212c; --muted:#5a6873; --line:#d3dce3;
-  --iris:#1d6c8c; --ray:#a86f00; --ray-soft:#fff3d6; --ok:#1f7a45; --ok-soft:#e2f3e9; --again:#b04a24; --again-soft:#fbe8df;
-  --a:#1d6c8c; --b:#7a4bb3; --c:#b5532a; --d:#23804a; --x:#5a6873;
+  --iris:#1d6c8c; --ray:#a86f00; --ray-soft:#fff3d6; --a:#1d6c8c; --b:#7a4bb3; --c:#b5532a; --d:#23804a;
   --display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif; --body:'Atkinson Hyperlegible Next',ui-sans-serif,system-ui,sans-serif;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b131b;--card:#121e29;--ink:#e7eef4;--muted:#93a5b4;--line:#253a4c;--iris:#62b8da;--ray:#ffc94a;--ray-soft:#2c2412;--ok:#4fcf86;--ok-soft:#12301f;--again:#f08a5d;--again-soft:#33190f;--a:#62b8da;--b:#b391e6;--c:#f08a5d;--d:#4fcf86;--x:#93a5b4;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0b131b;--card:#121e29;--ink:#e7eef4;--muted:#93a5b4;--line:#253a4c;--iris:#62b8da;--ray:#ffc94a;--ray-soft:#2c2412;--ok:#4fcf86;--ok-soft:#12301f;--again:#f08a5d;--again-soft:#33190f;--a:#62b8da;--b:#b391e6;--c:#f08a5d;--d:#4fcf86;--x:#93a5b4;color-scheme:dark}
-body{background:var(--bg);color:var(--ink);font:17px/1.5 var(--body);margin:0}
-.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 72px;display:flex;flex-direction:column;gap:16px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b131b;--card:#121e29;--ink:#e7eef4;--muted:#93a5b4;--line:#253a4c;--iris:#62b8da;--ray:#ffc94a;--ray-soft:#2c2412;--a:#62b8da;--b:#b391e6;--c:#f08a5d;--d:#4fcf86;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b131b;--card:#121e29;--ink:#e7eef4;--muted:#93a5b4;--line:#253a4c;--iris:#62b8da;--ray:#ffc94a;--ray-soft:#2c2412;--a:#62b8da;--b:#b391e6;--c:#f08a5d;--d:#4fcf86;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);margin:0}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 80px;display:flex;flex-direction:column;gap:20px}
 h1,h2,h3{font-family:var(--display);margin:0;line-height:1.15;text-wrap:balance}
-h1{font-size:clamp(28px,6vw,40px)}
-p{margin:0}
-.lead{color:var(--muted)}
-.steps{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--muted)}
-.steps b{color:var(--ink)}
-/* controls */
-.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
-.tabs button{font:700 16px var(--body);border:0;border-radius:9px;padding:10px;background:transparent;color:var(--muted);cursor:pointer}
-.tabs button[aria-selected="true"]{background:var(--iris);color:var(--card)}
-.who{display:flex;gap:8px;flex-wrap:wrap}
-.who button{font:700 15px var(--body);border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}
-.who button[aria-pressed="true"]{border-color:var(--ink)}
-.dot{width:10px;height:10px;border-radius:50%;background:var(--x)}
-button:focus-visible{outline:3px solid var(--ray);outline-offset:2px}
-.A{--who:var(--a)}.B{--who:var(--b)}.C{--who:var(--c)}.D{--who:var(--d)}.X{--who:var(--x)}
-.A .dot,.B .dot,.C .dot,.D .dot{background:var(--who)}
-/* progress */
-.prog{display:flex;flex-direction:column;gap:6px}
-.prog .row{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
-.bar{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:var(--ok);border-radius:inherit;transition:width .4s}
-/* flip card */
-.flip{perspective:1400px;border:0;background:none;padding:0;width:100%;cursor:pointer;font:inherit;color:inherit;text-align:left}
-.inner{display:grid;transition:transform .55s cubic-bezier(.3,1.25,.5,1);transform-style:preserve-3d}
+h1{font-size:clamp(30px,5vw,44px)}
+.lead{color:var(--muted);max-width:70ch}
+.how{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;color:var(--muted)}
+.how b{color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,480px),1fr));gap:20px}
+.flip{perspective:1400px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;display:block;width:100%}
+.flip:focus-visible{outline:3px solid var(--ray);outline-offset:4px;border-radius:14px}
+.inner{display:grid;transition:transform .7s cubic-bezier(.3,1.3,.5,1);transform-style:preserve-3d}
 .flip.turned .inner{transform:rotateY(180deg)}
-.side{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border:1px solid var(--line);border-top:6px solid var(--who,var(--x));border-radius:16px;
-  min-height:300px;padding:20px 22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 18px 44px -26px #0007;min-width:0}
+.side{grid-area:1/1;backface-visibility:hidden;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 16px 40px -24px #0006;min-width:0;border-top:6px solid var(--who)}
 .back{transform:rotateY(180deg)}
-.tag{display:flex;justify-content:space-between;gap:10px;font:700 12px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--who,var(--muted))}
-.tag span:last-child{color:var(--muted)}
-.q{font:700 clamp(24px,5vw,32px)/1.2 var(--display);margin:auto 0}
-.a{font-size:clamp(19px,4vw,23px);line-height:1.45;margin-top:auto}
-.memo{background:var(--ray-soft);border-left:4px solid var(--ray);padding:8px 12px;border-radius:0 10px 10px 0;font-weight:700;font-size:17px;margin-bottom:auto}
-.hint{font-size:13px;color:var(--muted);text-align:center}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.actions button,.show{font:700 18px var(--body);border-radius:14px;padding:14px;cursor:pointer;border:2px solid transparent}
-.show{width:100%;background:var(--iris);color:var(--card)}
-.again{background:var(--again-soft);color:var(--again);border-color:var(--again)!important}
-.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)!important}
-.done{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 22px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center}
-.done h2{font-size:28px}
-.ghost{font:700 15px var(--body);background:transparent;border:2px solid var(--line);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer}
-/* talk cards */
-.talk{background:var(--card);border:1px solid var(--line);border-top:6px solid var(--who);border-radius:16px;padding:16px 20px;display:flex;flex-direction:column;gap:10px}
-.talk h2{font-size:22px}
-.say{font-size:16px}
-.say b{display:block;font:700 12px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.keys{margin:0;padding-left:26px;display:flex;flex-direction:column;gap:6px;font-size:19px;font-weight:700}
-.keys li::marker{color:var(--who);font-family:var(--display)}
-.click{color:var(--iris);font-size:14px;font-weight:700;letter-spacing:.02em}
-.printonly{display:none}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.no{font:700 13px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--who)}
+.time{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+h2{font-size:21px}
+ol,ul{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:5px}
+li{font-size:15.5px}
+.say{background:var(--ray-soft);border-left:4px solid var(--ray);padding:7px 12px;border-radius:0 8px 8px 0;font-size:15px}
+.say b{font-family:var(--display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;display:block;color:var(--muted)}
+.click{font-weight:700;color:var(--iris)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:15px}
+dt{font-weight:700}dd{margin:0}
+.q{font-size:15px}.q b{display:block}
+.hint{font-size:12px;color:var(--muted);margin-top:auto}
+.A{--who:var(--a)}.B{--who:var(--b)}.C{--who:var(--c)}.D{--who:var(--d)}
+@media (max-width:520px){dl{grid-template-columns:1fr}dd{margin-bottom:6px}}
 @media print{
-  .tabs,.who,.prog,#learn,.steps,.hint{display:none!important}
-  body{background:#fff;color:#000}.wrap{max-width:none;padding:0}
-  #talk{display:flex!important}.talk{break-inside:avoid;box-shadow:none}
-  .printonly{display:block}.printonly table{width:100%;border-collapse:collapse;font-size:13px}
-  .printonly td{border:1px solid #999;padding:6px 8px;vertical-align:top;width:50%}
-  .printonly h3{margin:14px 0 6px}
+  body{background:#fff;color:#000}.wrap{max-width:none;padding:0}.how,.lead,header{display:none}
+  .grid{display:block}.flip{break-inside:avoid;margin-bottom:6mm}
+  .inner{grid-template-columns:1fr 1fr;transform:none!important;gap:0}
+  .side,.back{grid-area:auto;transform:none;backface-visibility:visible;box-shadow:none;border-radius:0;border:1px dashed #999;border-top:4px solid var(--who)}
+  .back{border-left:1px dotted #555}.hint{display:none}
 }
-@media (prefers-reduced-motion:reduce){.inner,.bar i{transition:none}}
 </style>
 
 <main class="wrap">
-  <header style="display:flex;flex-direction:column;gap:10px">
-    <h1>Karteikarten: Auge &amp; Brille</h1>
-    <p class="lead">Kurze Fragen, kurze Antworten. Wählt oben eure Person – dann seht ihr nur euren Teil.</p>
-    <div class="steps"><span><b>1.</b> Frage lesen</span><span><b>2.</b> laut antworten</span><span><b>3.</b> umdrehen</span><span><b>4.</b> ehrlich klicken</span></div>
-  </header>
+<header style="display:flex;flex-direction:column;gap:10px">
+  <h1>Karteikarten: Das Auge und die Brille</h1>
+  <p class="lead">Eine Karte pro Folie. <b>Vorne</b> steht, was ihr in welcher Reihenfolge sagt (mit Klick-Hinweisen). <b>Hinten</b> stehen die Fachbegriffe in einfachen Worten und Fragen, die kommen können. Nicht Wort für Wort lernen – nur die Reihenfolge der Punkte. Den Rest erzählt ihr frei.</p>
+  <div class="how"><span><b>Klick / Tippen:</b> Karte umdrehen</span><span><b>Drucken:</b> lokale Datei öffnen, Strg+P → Querformat. Vorder- und Rückseite stehen nebeneinander: ausschneiden, in der Mitte falten.</span><span><b>Farben:</b> <span style="color:var(--a)">A</span> · <span style="color:var(--b)">B</span> · <span style="color:var(--c)">C</span> · <span style="color:var(--d)">D</span></span></div>
+</header>
 
-  <div class="tabs" role="tablist" aria-label="Modus">
-    <button id="tabLearn" role="tab" aria-selected="true" type="button">Abfragen</button>
-    <button id="tabTalk" role="tab" aria-selected="false" type="button">Vortrag</button>
+<div class="grid">
+
+<!-- 1 -->
+<button class="flip A" type="button"><div class="inner">
+  <div class="side front">
+    <div class="head"><span class="no">Folie 1 · Person A</span><span class="time">≈ 40 s</span></div>
+    <h2>Titel: Das Auge und die Brille</h2>
+    <div class="say"><b>Erster Satz (auswendig)</b>„Hallo! Unser Thema ist ein Organ, das ihr gerade alle benutzt: euer Auge – und die Brille.“</div>
+    <ol>
+      <li>Frage ans Publikum: „Hand hoch, wer trägt eine Brille oder Kontaktlinsen?“ – kurz kommentieren.</li>
+      <li>Fakt: Fast 2 von 3 Erwachsenen in Deutschland tragen eine Brille.</li>
+      <li>Auf das 3D-Auge zeigen: „Das Auge schaut immer dahin, wo etwas passiert – genau wie eures.“</li>
+      <li>Plan nennen: „Wir folgen einem Lichtstrahl: durchs Auge, ins Gehirn, dann Sehfehler, dann die Brille.“</li>
+    </ol>
+    <span class="hint">Umdrehen ↻</span>
   </div>
-  <div class="who" id="who" aria-label="Person">
-    <button type="button" data-who="Alle" aria-pressed="true"><span class="dot"></span>Alle</button>
-    <button type="button" data-who="A" class="A" aria-pressed="false"><span class="dot"></span>A · Folie 1–3</button>
-    <button type="button" data-who="B" class="B" aria-pressed="false"><span class="dot"></span>B · Folie 4 + 8</button>
-    <button type="button" data-who="C" class="C" aria-pressed="false"><span class="dot"></span>C · Folie 5</button>
-    <button type="button" data-who="D" class="D" aria-pressed="false"><span class="dot"></span>D · Folie 6–7</button>
+  <div class="side back">
+    <div class="head"><span class="no">Folie 1 · Rückseite</span></div>
+    <dl><dt>Iris</dt><dd>der farbige Ring im Auge</dd><dt>Pupille</dt><dd>das schwarze Loch in der Mitte</dd></dl>
+    <div class="q"><b>Wenn keiner die Hand hebt:</b>„Dann seid ihr die Ausnahme – bei Erwachsenen sind es fast zwei Drittel.“</div>
+    <div class="q"><b>Tipp:</b> Langsam sprechen, ins Publikum schauen, lächeln. Der erste Satz muss sitzen.</div>
   </div>
+</div></button>
 
-  <section id="learn" style="display:flex;flex-direction:column;gap:14px" aria-live="polite">
-    <div class="prog"><div class="row"><span id="progTxt"></span><span id="leftTxt"></span></div><div class="bar"><i id="bar"></i></div></div>
-    <div id="cardBox"></div>
-    <div id="actBox"></div>
-    <p class="hint" id="keysHint">Tastatur: Leertaste = umdrehen · ← = Nochmal · → = Gewusst</p>
-  </section>
+<!-- 2 -->
+<button class="flip A" type="button"><div class="inner">
+  <div class="side front">
+    <div class="head"><span class="no">Folie 2 · Person A</span><span class="time">≈ 1 min</span></div>
+    <h2>Aufbau des Auges + Weg des Lichts</h2>
+    <ol>
+      <li>„Hier seht ihr das Auge aufgeschnitten, von der Seite. Links ist vorne, rechts hinten.“ Größe: so breit wie eine 2-Euro-Münze.</li>
+      <li>Von links nach rechts zeigen: <b>Hornhaut</b> (Fenster) → <b>Iris</b> (farbiger Ring) → <b>Pupille</b> (Loch) → <b>Linse</b> → <b>Ziliarmuskel</b> + <b>Zonulafasern</b> (halten und ziehen die Linse).</li>
+      <li>Innen: <b>Glaskörper</b> – „wie durchsichtiger Wackelpudding“.</li>
+      <li>Hinten: <b>Netzhaut</b> = Leinwand. <b>Gelber Fleck</b> = schärfste Stelle. <b>Blinder Fleck</b> = da geht der <b>Sehnerv</b> raus.</li>
+      <li><span class="click">[Klick: Licht losschicken]</span> „Das Licht fliegt: Hornhaut, Kammerwasser, Pupille, Linse, Glaskörper, Netzhaut.“</li>
+      <li>Eselsbrücke: „Hunde Können Prima Laufen, Gurken Nicht.“</li>
+    </ol>
+    <span class="hint">Umdrehen ↻</span>
+  </div>
+  <div class="side back">
+    <div class="head"><span class="no">Folie 2 · Rückseite</span></div>
+    <dl>
+      <dt>Hornhaut (Cornea)</dt><dd>durchsichtiges Fenster vorne</dd>
+      <dt>Lederhaut (Sklera)</dt><dd>das Weiße im Auge</dd>
+      <dt>Kammerwasser</dt><dd>klare Flüssigkeit hinter der Hornhaut</dd>
+      <dt>Glaskörper</dt><dd>Gel, das das Auge rund hält</dd>
+      <dt>Netzhaut (Retina)</dt><dd>Schicht mit Sinneszellen, „Bildsensor“</dd>
+      <dt>Fovea</dt><dd>gelber Fleck, Stelle des schärfsten Sehens</dd>
+      <dt>Blinder Fleck</dt><dd>keine Sinneszellen, da geht der Sehnerv raus</dd>
+    </dl>
+    <div class="q"><b>Frage: Warum ist alles durchsichtig?</b>Sonst käme das Licht nicht bis zur Netzhaut.</div>
+  </div>
+</div></button>
 
-  <section id="talk" style="display:none;flex-direction:column;gap:14px"></section>
-  <section class="printonly" id="printList"></section>
+<!-- 3 -->
+<button class="flip A" type="button"><div class="inner">
+  <div class="side front">
+    <div class="head"><span class="no">Folie 3 · Person A</span><span class="time">≈ 1 min 15 s</span></div>
+    <h2>Wer macht was? Scharfstellen</h2>
+    <ol>
+      <li><b>Hornhaut:</b> schützt und knickt das Licht am stärksten – ca. ⅔ der Arbeit.</li>
+      <li><b>Iris:</b> Muskel, regelt die Lichtmenge wie die Blende einer Kamera. <span class="click">[Klick: Licht an]</span> „Hell → Pupille klein, dunkel → groß.“</li>
+      <li><b>Pupille:</b> nur das Loch (2–8 mm). <b>Linse:</b> Feineinstellung.</li>
+      <li>„Eine Kamera schiebt die Linse. Das Auge <b>verformt</b> sie – das heißt <b>Akkommodation</b>.“</li>
+      <li><span class="click">[Klick: Ferne]</span> Muskel entspannt → Fasern straff → Linse flach → schwach.</li>
+      <li><span class="click">[Klick: Nähe]</span> Muskel spannt an → Fasern locker → Linse rund → stark.</li>
+      <li>Merksatz: „Ferne = Faulenzen.“ Handy-Beispiel: Muskel arbeitet → Augen müde.</li>
+    </ol>
+    <div class="say"><b>Übergabe</b>„Was hinten auf der Netzhaut passiert, erklärt euch jetzt [Name B].“</div>
+    <span class="hint">Umdrehen ↻</span>
+  </div>
+  <div class="side back">
+    <div class="head"><span class="no">Folie 3 · Rückseite</span></div>
+    <dl>
+      <dt>Akkommodation</dt><dd>Scharfstellen durch Verformen der Linse</dd>
+      <dt>Ziliarmuskel</dt><dd>Ringmuskel um die Linse</dd>
+      <dt>Zonulafasern</dt><dd>Fäden, an denen die Linse hängt</dd>
+      <dt>Brechkraft</dt><dd>wie stark etwas das Licht knickt</dd>
+      <dt>Blende</dt><dd>Öffnung, die die Lichtmenge regelt</dd>
+    </dl>
+    <div class="q"><b>Fangfrage: Muskel an – Fasern straff?</b>Nein! Muskel an → Ring wird enger → Fasern <b>locker</b> → Linse rund.</div>
+    <div class="q"><b>Warum ist die Pupille schwarz?</b>Licht geht rein und kommt kaum wieder raus.</div>
+  </div>
+</div></button>
+
+<!-- 4 -->
+<button class="flip B" type="button"><div class="inner">
+  <div class="side front">
+    <div class="head"><span class="no">Folie 4 · Person B</span><span class="time">≈ 2 min</span></div>
+    <h2>Vom Licht zum Sehen</h2>
+    <div class="say"><b>Start</b>„Danke! Das Bild entsteht auf der Netzhaut – und es steht auf dem Kopf!“</div>
+    <ol>
+      <li>Auf den Baum zeigen: gelbe Linie von der Spitze → durch die Linse → landet <b>unten</b>. Hellblaue Linie vom Stamm → landet <b>oben</b>.</li>
+      <li>„Die Strahlen kreuzen sich wie ein X. Wie bei einer Lochkamera.“ Bild: umgekehrt, seitenverkehrt, kleiner.</li>
+      <li><span class="click">[Klick – Zoom in die Netzhaut]</span> <b>Stäbchen</b> (lila Säulen, 120 Mio., hell/dunkel) und <b>Zapfen</b> (6 Mio., Farben rot/grün/blau). Das runde Foto = echte Netzhaut.</li>
+      <li>Licht ändert den <b>Sehfarbstoff</b> → Kettenreaktion → <b>elektrisches Signal</b>. „Wie eine Solarzelle.“</li>
+      <li><span class="click">[Klick]</span> Signal über den <b>Sehnerv</b> (leuchtende Kette) → <b>Sehnervenkreuzung</b> → <b>Sehrinde</b> im Hinterkopf.</li>
+      <li>Gehirn: deutet das Bild richtig, macht aus 2 Augen 3D, füllt den blinden Fleck, erkennt mit dem Gedächtnis.</li>
+    </ol>
+    <div class="say"><b>Übergabe</b>„Was passiert, wenn das Bild nicht scharf ist, erklärt [Name C].“</div>
+    <span class="hint">Umdrehen ↻</span>
+  </div>
+  <div class="side back">
+    <div class="head"><span class="no">Folie 4 · Rückseite</span></div>
+    <dl>
+      <dt>Reelles Bild</dt><dd>echtes Bild, das auf einer Fläche landet</dd>
+      <dt>Fotorezeptoren</dt><dd>Sinneszellen für Licht (Stäbchen, Zapfen)</dd>
+      <dt>Sehfarbstoff</dt><dd>Stoff in den Zellen, der durch Licht seine Form ändert</dd>
+      <dt>Sehrinde</dt><dd>Teil des Gehirns im Hinterkopf, der Bilder verarbeitet</dd>
+    </dl>
+    <div class="q"><b>Warum sehen wir nicht auf dem Kopf?</b>Das Gehirn hat gelernt, das Bild richtig zu deuten. Versuch mit Umkehrbrille: Nach ein paar Tagen gewöhnt man sich daran.</div>
+    <div class="q"><b>Warum nachts keine Farben?</b>Nur die Stäbchen arbeiten, die sehen keine Farben.</div>
+  </div>
+</div></button>
+
+<!-- 5 -->
+<button class="flip C" type="button"><div class="inner">
+  <div class="side front">
+    <div class="head"><span class="no">Folie 5 · Person C</span><span class="time">≈ 1 min 45 s</span></div>
+    <h2>Kurz- und Weitsichtigkeit</h2>
+    <ol>
+      <li>„Licht von weit weg kommt parallel ins Auge – die gelben Linien.“</li>
+      <li><b>Normal:</b> Strahlen treffen sich genau auf der Netzhaut → grüner Punkt → scharf.</li>
+      <li><span class="click">[Klick]</span> <b>Kurzsichtig:</b> Ferne unscharf (Tafel). „Seht ihr? Das Auge ist länger.“ Treffpunkt <b>vor</b> der Netzhaut → danach wieder auseinander → roter Kreis auf der Netzhaut.</li>
+      <li><span class="click">[Klick]</span> <b>Weitsichtig:</b> Nähe unscharf (Handy). Auge kürzer. Treffpunkt wäre <b>hinter</b> der Netzhaut (gestrichelt).</li>
+      <li><span class="click">[Klick]</span> „Statt eines Punktes kommt ein Fleck an: der <b>Unschärfekreis</b>.“</li>
+      <li>Zahl: „1 mm zu lang = ca. 3 Dioptrien kurzsichtig.“ Vergleich: Beamer zu nah / zu weit von der Wand.</li>
+    </ol>
+    <div class="say"><b>Übergabe</b>„Was Dioptrien sind und wie die Brille hilft, erklärt [Name D].“</div>
+    <span class="hint">Umdrehen ↻</span>
+  </div>
+  <div class="side back">
+    <div class="head"><span class="no">Folie 5 · Rückseite</span></div>
+    <dl>
+      <dt>Myopie</dt><dd>Kurzsichtigkeit</dd>
+      <dt>Hyperopie</dt><dd>Weitsichtigkeit</dd>
+      <dt>Unschärfekreis</dt><dd>verschwommener Fleck statt Punkt</dd>
+      <dt>Augapfel</dt><dd>das ganze kugelige Auge, ca. 24 mm</dd>
+    </dl>
+    <div class="q"><b>Woher kommt Kurzsichtigkeit?</b>Gene, viel Nahsehen (Handy, Lesen), wenig Tageslicht draußen.</div>
+    <div class="q"><b>Was ist Altersweitsichtigkeit?</b>Ab ca. 45 wird die Linse steif und kann nicht mehr rund werden → Lesebrille.</div>
+  </div>
+</div></button>
+
+<!-- 6 -->
+<button class="flip D" type="button"><div class="inner">
+  <div class="side front">
+    <div class="head"><span class="no">Folie 6 · Person D</span><span class="time">≈ 2 min</span></div>
+    <h2>Brechung, Linsen, Dioptrien</h2>
+    <ol>
+      <li>Links: „Der Strahl knickt im Glas ab – das heißt <b>Brechung</b>.“</li>
+      <li>Warum: In Glas ist Licht langsamer (200 000 statt 300 000 km/s). Auto fährt schräg auf eine Wiese → ein Rad wird zuerst langsamer → Auto dreht sich.</li>
+      <li>Regel: „Licht knickt immer zur dickeren Stelle des Glases.“</li>
+      <li><span class="click">[Regler auf +]</span> <b>Sammellinse</b>, Mitte dick, <b>konvex</b>. Strahlen treffen sich im <b>Brennpunkt</b> (heller Punkt). Abstand = <b>Brennweite</b>.</li>
+      <li><span class="click">[Regler auf −]</span> <b>Zerstreuungslinse</b>, Rand dick, <b>konkav</b>. Strahlen laufen auseinander.</li>
+      <li><span class="click">[Regler auf 0]</span> Fensterglas – nichts passiert.</li>
+      <li>Dioptrie = 1 / Brennweite in Metern. Plus = sammeln, Minus = zerstreuen. Je größer die Zahl, desto stärker. Auge ≈ 60 dpt.</li>
+    </ol>
+    <span class="hint">Umdrehen ↻</span>
+  </div>
+  <div class="side back">
+    <div class="head"><span class="no">Folie 6 · Rückseite</span></div>
+    <dl>
+      <dt>Brechung</dt><dd>Licht knickt beim Wechsel Luft ↔ Glas ab</dd>
+      <dt>Lot</dt><dd>gedachte Linie senkrecht zur Oberfläche</dd>
+      <dt>konvex</dt><dd>nach außen gewölbt (Sammellinse)</dd>
+      <dt>konkav</dt><dd>nach innen gewölbt, wie eine Höhle (Zerstreuungslinse)</dd>
+      <dt>Brennpunkt</dt><dd>Punkt, wo sich die Strahlen treffen</dd>
+      <dt>Dioptrie</dt><dd>Einheit der Brechkraft, D = 1 / f</dd>
+    </dl>
+    <div class="q"><b>Rechenbeispiel:</b>f = 0,5 m → 1 / 0,5 = 2 dpt. −2,5 dpt → f = 40 cm, Zerstreuungslinse.</div>
+    <div class="q"><b>Alltag:</b> Strohhalm im Wasserglas sieht geknickt aus.</div>
+  </div>
+</div></button>
+
+<!-- 7 -->
+<button class="flip D" type="button"><div class="inner">
+  <div class="side front">
+    <div class="head"><span class="no">Folie 7 · Person D</span><span class="time">≈ 1 min 30 s</span></div>
+    <h2>Die Brille macht es wieder scharf</h2>
+    <ol>
+      <li>„Ohne Brille seht ihr die roten Treffpunkte: vor und hinter der Netzhaut.“</li>
+      <li><span class="click">[Klick: Brille aufsetzen]</span> Links fliegt ein <b>Minusglas</b> rein (Rand dick).</li>
+      <li>„Es spreizt die Strahlen ein bisschen → sie treffen sich <b>später</b> → genau auf der Netzhaut. Grün!“</li>
+      <li>Rechts: <b>Plusglas</b> (Mitte dick) bündelt vorher etwas → Treffpunkt <b>früher</b> → genau auf der Netzhaut.</li>
+      <li>„Brille + Auge zusammen haben genau die richtige Brechkraft.“</li>
+      <li>Merksatz: <b>Kurz – Konkav – Minus</b> · <b>Weit – Wölbung – Plus</b>.</li>
+      <li>Demo (optional): Brille über einen Text halten. Schrift größer = Plus, kleiner = Minus.</li>
+    </ol>
+    <span class="hint">Umdrehen ↻</span>
+  </div>
+  <div class="side back">
+    <div class="head"><span class="no">Folie 7 · Rückseite</span></div>
+    <dl>
+      <dt>Minusglas</dt><dd>Zerstreuungslinse, für Kurzsichtige</dd>
+      <dt>Plusglas</dt><dd>Sammellinse, für Weitsichtige</dd>
+    </dl>
+    <div class="q"><b>Macht die Brille das Auge gesund?</b>Nein. Sie gibt den Strahlen nur den richtigen Schubs, bevor sie ins Auge gehen.</div>
+    <div class="q"><b>Und Kontaktlinsen?</b>Gleiches Prinzip, sitzen direkt auf der Hornhaut.</div>
+    <div class="q"><b>Rechnung:</b> Auge 63 dpt (zu stark) + Brille −3 dpt = 60 dpt → passt.</div>
+  </div>
+</div></button>
+
+<!-- 8 -->
+<button class="flip B" type="button"><div class="inner">
+  <div class="side front">
+    <div class="head"><span class="no">Folie 8 · Person B</span><span class="time">≈ 45 s</span></div>
+    <h2>Zusammenfassung + Fragen</h2>
+    <ol>
+      <li>Ein Satz für alles: „Hornhaut und Linse bündeln das Licht → umgedrehtes Bild auf der Netzhaut → Stäbchen und Zapfen machen Signale → das Gehirn macht daraus Sehen.“</li>
+      <li>Tabelle Zeile für Zeile: unscharf (Ferne / Nähe) → Treffpunkt (vor / hinter) → Ursache (zu lang / zu kurz) → Brille (Minus / Plus).</li>
+      <li>„Danke fürs Zuhören! Habt ihr Fragen?“</li>
+    </ol>
+    <div class="say"><b>Bonus-Satz zum KI-Bild</b>„Wir haben KI für Ideen genutzt. Ein KI-Bild hatte aber Fehler: Parallele Strahlen müssen sich in einem Punkt auf der Netzhaut treffen. Deshalb haben wir alles mit dem Physikbuch geprüft.“</div>
+    <span class="hint">Umdrehen ↻</span>
+  </div>
+  <div class="side back">
+    <div class="head"><span class="no">Folie 8 · Rückseite</span></div>
+    <div class="q"><b>Unter Wasser unscharf – warum?</b>Wasser und Hornhaut knicken das Licht fast gleich. Die Hornhaut verliert ihre Wirkung. Taucherbrille bringt Luft zurück.</div>
+    <div class="q"><b>Warum hilft Augen-Zusammenkneifen?</b>Kleinere Öffnung → kleinerer Unschärfefleck, wie bei einer Lochkamera.</div>
+    <div class="q"><b>Hornhautverkrümmung?</b>Hornhaut wie ein Rugbyball gewölbt → Punkte werden Striche. Zylinderglas hilft.</div>
+    <div class="q"><b>Frage, die ihr nicht wisst:</b>„Gute Frage, das haben wir nicht genau recherchiert – ich vermute …“</div>
+  </div>
+</div></button>
+
+</div>
 </main>
 
 <script>
-(() => {
-/* p = Person (A–D, X = alle), f = Folie */
-const CARDS = [
-  { id: 'A1', p: 'A', f: 2, q: 'Wie groß ist das Auge?', a: 'Etwa 2,4 cm – so breit wie eine 2-Euro-Münze.' },
-  { id: 'A2', p: 'A', f: 2, q: 'Was ist die Hornhaut (Cornea)?', a: 'Das durchsichtige Fenster ganz vorne. Sie knickt das Licht am stärksten – etwa ⅔.' },
-  { id: 'A3', p: 'A', f: 2, q: 'Was ist die Iris?', a: 'Der farbige Ring. Ein Muskel, der die Lichtmenge regelt – wie die Blende einer Kamera.' },
-  { id: 'A4', p: 'A', f: 2, q: 'Was ist die Pupille?', a: 'Das schwarze Loch in der Iris. Hell → klein. Dunkel → groß (2–8 mm).' },
-  { id: 'A5', p: 'A', f: 2, q: 'Was ist der Glaskörper?', a: 'Ein durchsichtiges Gel, das das Auge rund hält – wie Wackelpudding.' },
-  { id: 'A6', p: 'A', f: 2, q: 'Was ist die Netzhaut (Retina)?', a: 'Die Leinwand hinten im Auge. Dort sitzen die Sinneszellen.' },
-  { id: 'A7', p: 'A', f: 2, q: 'Gelber Fleck und blinder Fleck – was ist das?', a: 'Gelber Fleck: hier sehen wir am schärfsten. Blinder Fleck: hier geht der Sehnerv raus – dort sehen wir nichts.' },
-  { id: 'A8', p: 'A', f: 2, q: 'Welchen Weg nimmt das Licht im Auge?', a: 'Hornhaut → Kammerwasser → Pupille → Linse → Glaskörper → Netzhaut.', m: '„Hunde Können Prima Laufen, Gurken Nicht.“' },
-  { id: 'A9', p: 'A', f: 3, q: 'Was macht die Linse?', a: 'Die Feineinstellung. Sie ist weich und kann ihre Form ändern.' },
-  { id: 'A10', p: 'A', f: 3, q: 'Was heißt Akkommodation?', a: 'Scharfstellen, indem die Linse ihre Form ändert.' },
-  { id: 'A11', p: 'A', f: 3, q: 'Was passiert, wenn du in die Ferne schaust?', a: 'Ziliarmuskel locker → Fasern straff → Linse flach → bricht schwach.', m: '„Ferne = Faulenzen.“' },
-  { id: 'A12', p: 'A', f: 3, q: 'Was passiert, wenn du in die Nähe schaust?', a: 'Ziliarmuskel angespannt → Fasern locker → Linse rund → bricht stark.' },
-  { id: 'A13', p: 'A', f: 3, q: 'Fangfrage: Muskel angespannt – sind die Fasern dann straff?', a: 'Nein! Muskel an → Fasern locker → Linse wird rund.' },
-  { id: 'B1', p: 'B', f: 4, q: 'Wo entsteht das Bild im Auge?', a: 'Auf der Netzhaut – am schärfsten im gelben Fleck.' },
-  { id: 'B2', p: 'B', f: 4, q: 'Wie steht das Bild auf der Netzhaut?', a: 'Auf dem Kopf, seitenverkehrt und kleiner.' },
-  { id: 'B3', p: 'B', f: 4, q: 'Warum steht das Bild auf dem Kopf?', a: 'Licht läuft geradeaus. Die Strahlen kreuzen sich in der Linse wie ein X – wie bei einer Lochkamera.' },
-  { id: 'B4', p: 'B', f: 4, q: 'Was machen die Stäbchen?', a: 'Sie sehen hell und dunkel, auch nachts. Es gibt etwa 120 Millionen.' },
-  { id: 'B5', p: 'B', f: 4, q: 'Was machen die Zapfen?', a: 'Sie sehen Farben: rot, grün, blau. Es gibt etwa 6 Millionen.' },
-  { id: 'B6', p: 'B', f: 4, q: 'Wie wird aus Licht ein Signal?', a: 'Licht ändert den Sehfarbstoff → Kettenreaktion → elektrisches Signal.' },
-  { id: 'B7', p: 'B', f: 4, q: 'Welchen Weg gehen die Signale?', a: 'Sehnerv → Sehnervenkreuzung → Sehrinde im Hinterkopf.' },
-  { id: 'B8', p: 'B', f: 4, q: 'Was macht das Gehirn mit den Signalen?', a: 'Es deutet das Bild richtig herum, macht aus 2 Augen 3D und erkennt Dinge mit dem Gedächtnis.' },
-  { id: 'B9', p: 'B', f: 4, q: 'Warum sehen wir nachts kaum Farben?', a: 'Nachts arbeiten fast nur die Stäbchen – und die sehen keine Farben.' },
-  { id: 'B10', p: 'B', f: 8, q: 'Sag alles in einem Satz.', a: 'Hornhaut und Linse bündeln das Licht → Bild auf der Netzhaut → Stäbchen und Zapfen machen Signale → das Gehirn macht daraus Sehen.' },
-  { id: 'C1', p: 'C', f: 5, q: 'Was sehen Kurzsichtige unscharf?', a: 'Die Ferne, zum Beispiel die Tafel. Nah sehen sie gut.' },
-  { id: 'C2', p: 'C', f: 5, q: 'Was sehen Weitsichtige unscharf?', a: 'Die Nähe, zum Beispiel das Handy. In der Ferne sehen sie gut.' },
-  { id: 'C3', p: 'C', f: 5, q: 'Wo treffen sich die Strahlen bei Kurzsichtigkeit?', a: 'Vor der Netzhaut. Das Auge ist zu lang oder bricht zu stark.', m: 'Auge zu lang → Bild kommt zu früh.' },
-  { id: 'C4', p: 'C', f: 5, q: 'Wo treffen sich die Strahlen bei Weitsichtigkeit?', a: 'Hinter der Netzhaut. Das Auge ist zu kurz oder bricht zu schwach.' },
-  { id: 'C5', p: 'C', f: 5, q: 'Was ist der Unschärfekreis?', a: 'Ein verschwommener Fleck auf der Netzhaut statt eines scharfen Punktes.' },
-  { id: 'C6', p: 'C', f: 5, q: 'Wie viel macht 1 mm Augenlänge aus?', a: 'Etwa 3 Dioptrien.' },
-  { id: 'C7', p: 'C', f: 5, q: 'Was ist Altersweitsichtigkeit?', a: 'Ab etwa 45 wird die Linse steif und kann nicht mehr rund werden → Lesebrille.' },
-  { id: 'D1', p: 'D', f: 6, q: 'Was ist Brechung?', a: 'Licht knickt ab, wenn es schräg von Luft in Glas geht.' },
-  { id: 'D2', p: 'D', f: 6, q: 'Warum knickt Licht im Glas ab?', a: 'In Glas ist Licht langsamer (200 000 statt 300 000 km/s). Wie ein Auto, das schräg auf eine Wiese fährt.' },
-  { id: 'D3', p: 'D', f: 6, q: 'Wohin knickt das Licht in einer Linse?', a: 'Immer zur dickeren Stelle des Glases.' },
-  { id: 'D4', p: 'D', f: 6, q: 'Sammellinse: Wie sieht sie aus, was macht sie?', a: 'Mitte dick (konvex). Sie bündelt das Licht im Brennpunkt. = Plusglas.' },
-  { id: 'D5', p: 'D', f: 6, q: 'Zerstreuungslinse: Wie sieht sie aus, was macht sie?', a: 'Rand dick (konkav). Sie lässt das Licht auseinanderlaufen. = Minusglas.' },
-  { id: 'D6', p: 'D', f: 6, q: 'Was ist eine Dioptrie?', a: 'Die Einheit der Brechkraft: D = 1 / Brennweite in Metern. Größere Zahl = stärkeres Glas.' },
-  { id: 'D7', p: 'D', f: 6, q: 'Rechne: Brennweite 0,5 m – wie viele Dioptrien?', a: '1 / 0,5 = 2 Dioptrien.' },
-  { id: 'D8', p: 'D', f: 7, q: 'Welche Brille braucht ein Kurzsichtiger – und warum?', a: 'Ein Minusglas. Es spreizt die Strahlen → sie treffen sich später, genau auf der Netzhaut.', m: '„Kurz – Konkav – Minus.“' },
-  { id: 'D9', p: 'D', f: 7, q: 'Welche Brille braucht ein Weitsichtiger – und warum?', a: 'Ein Plusglas. Es bündelt die Strahlen → sie treffen sich früher, genau auf der Netzhaut.', m: '„Weit – Wölbung – Plus.“' },
-  { id: 'D10', p: 'D', f: 7, q: 'Wie erkennst du Plus- oder Minusglas ohne Brillenpass?', a: 'Über einen Text halten: Schrift größer = Plus. Schrift kleiner = Minus.' },
-  { id: 'X1', p: 'X', f: 0, q: 'Lehrer-Frage: Warum ist die Pupille schwarz?', a: 'Licht geht rein und kommt kaum wieder raus.' },
-  { id: 'X2', p: 'X', f: 0, q: 'Lehrer-Frage: Warum sieht man unter Wasser unscharf?', a: 'Wasser und Hornhaut knicken das Licht fast gleich – die Hornhaut wirkt nicht mehr.' },
-  { id: 'X3', p: 'X', f: 0, q: 'Lehrer-Frage: Warum sehen wir die Welt nicht auf dem Kopf?', a: 'Das Gehirn hat gelernt, das Bild richtig zu deuten.' },
-  { id: 'X4', p: 'X', f: 0, q: 'Lehrer-Frage: Was macht eine Kontaktlinse?', a: 'Dasselbe wie eine Brille – sie sitzt nur direkt auf der Hornhaut.' }
-];
-const TALK = [
-  { n: 1, p: 'A', t: '40 s', h: 'Titel', s: '„Hallo! Unser Thema: das Auge und die Brille.“',
-    k: ['Hände hoch: Wer trägt Brille?', 'Fast 2 von 3 Erwachsenen', 'Wir folgen einem Lichtstrahl', 'Auge → Gehirn → Sehfehler → Brille'] },
-  { n: 2, p: 'A', t: '1 min', h: 'Aufbau des Auges', s: '„Hier seht ihr das Auge – aufgeschnitten.“',
-    k: ['2-Euro-Münze', 'Hornhaut = Fenster', 'Iris + Pupille', 'Linse + Ziliarmuskel', 'Glaskörper = Wackelpudding', 'Netzhaut = Leinwand · gelber + blinder Fleck', '[Licht losschicken] Hunde Können Prima Laufen …'] },
-  { n: 3, p: 'A', t: '1 min 15 s', h: 'Wer macht was + Scharfstellen', s: '„Jedes Teil hat einen Job.“',
-    k: ['Hornhaut: knickt am stärksten (⅔)', '[Licht an] Iris = Blende', 'Linse = Feineinstellung', 'Akkommodation = Linse verformen', '[Ferne] Muskel locker → Linse flach', '[Nähe] Muskel an → Linse rund', 'Ferne = Faulenzen'], e: '„… das erklärt euch jetzt [Name B].“' },
-  { n: 4, p: 'B', t: '2 min', h: 'Vom Licht zum Sehen', s: '„Danke! Das Bild steht auf dem Kopf!“',
-    k: ['Strahlen kreuzen sich = X', 'wie eine Lochkamera', '[Klick] Zoom: Stäbchen 120 Mio. · Zapfen 6 Mio.', 'Sehfarbstoff → Strom', '[Klick] Kette = Sehnerv → Sehrinde', 'Gehirn: richtig herum, 3D, erkennen'], e: '„… das erklärt [Name C].“' },
-  { n: 5, p: 'C', t: '1 min 45 s', h: 'Kurz- und Weitsichtigkeit', s: '„Bei vielen ist das Bild nicht scharf.“',
-    k: ['Normal: Treffpunkt auf der Netzhaut (grün)', '[Klick] Kurz: Ferne unscharf · Auge zu lang · Treffpunkt vor', '[Klick] Weit: Nähe unscharf · Auge zu kurz · Treffpunkt hinter', '[Klick] Unschärfekreis', '1 mm = 3 Dioptrien'], e: '„… das erklärt [Name D].“' },
-  { n: 6, p: 'D', t: '2 min', h: 'Brechung, Linsen, Dioptrien', s: '„Danke! Die Brille nutzt Brechung.“',
-    k: ['Foto: Laser knickt im Glas', 'Glas = langsamer · Auto auf Wiese', '[Regler +] Sammellinse · konvex · Brennpunkt', '[Regler −] Zerstreuungslinse · konkav', 'Dioptrie = 1 / Brennweite', 'Plus / Minus · Auge = 60 dpt'] },
-  { n: 7, p: 'D', t: '1 min 30 s', h: 'Die Brille macht es scharf', s: '„Jetzt bringen wir alles zusammen.“',
-    k: ['Rot = unscharf', '[Brille aufsetzen]', 'Kurz → Minusglas → später → Netzhaut', 'Weit → Plusglas → früher → Netzhaut', 'Kurz – Konkav – Minus · Weit – Wölbung – Plus', 'Demo: Brille über Text halten'] },
-  { n: 8, p: 'B', t: '45 s', h: 'Zusammenfassung', s: '„Fassen wir zusammen.“',
-    k: ['Licht → Bild → Signal → Gehirn', 'Kurz: vor der Netzhaut · Minus', 'Weit: hinter der Netzhaut · Plus', '„Danke! Habt ihr Fragen?“'] }
-];
-const NAME = { A: 'Person A', B: 'Person B', C: 'Person C', D: 'Person D', X: 'Alle' };
-const $ = s => document.querySelector(s);
-const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
-
-let who = store.get('kk2-who', 'Alle'), mode = store.get('kk2-mode', 'learn');
-const known = new Set(store.get('kk2-known', []));
-let queue = [], flipped = false;
-const pool = () => CARDS.filter(c => who === 'Alle' || c.p === who || c.p === 'X');
-const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const save = () => store.set('kk2-known', [...known]);
-
-function rebuild() { const open = pool().filter(c => !known.has(c.id)); queue = [...shuffle(open.filter(c => c.p !== 'X')), ...shuffle(open.filter(c => c.p === 'X'))]; flipped = false; render(); }
-function progress() {
-  const p = pool(), k = p.filter(c => known.has(c.id)).length;
-  $('#progTxt').textContent = `${k} von ${p.length} gewusst`;
-  $('#leftTxt').textContent = queue.length ? `noch ${queue.length} im Stapel` : '';
-  $('#bar').style.width = (p.length ? k / p.length * 100 : 0) + '%';
-}
-function render() {
-  progress();
-  const box = $('#cardBox'), act = $('#actBox');
-  if (!queue.length) {
-    box.innerHTML = `<div class="done"><h2>Geschafft!</h2><p>Du hast alle ${pool().length} Karten gewusst. Morgen noch einmal durchgehen – dann sitzt es.</p><button class="ghost" id="resetBtn" type="button">Alle nochmal üben</button></div>`;
-    act.innerHTML = '';
-    $('#resetBtn').onclick = () => { pool().forEach(c => known.delete(c.id)); save(); rebuild(); };
-    return;
-  }
-  const c = queue[0], tag = `<div class="tag"><span>${c.f ? 'Folie ' + c.f : 'Bonus'}</span><span>${NAME[c.p]}</span></div>`;
-  box.innerHTML = `<button class="flip ${c.p}${flipped ? ' turned' : ''}" id="flipBtn" type="button" aria-pressed="${flipped}" aria-label="Karte umdrehen"><div class="inner">
-      <div class="side front">${tag}<div class="q">${esc(c.q)}</div><div class="hint">Erst laut antworten – dann tippen</div></div>
-      <div class="side back">${tag}<div class="a">${esc(c.a)}</div>${c.m ? `<div class="memo">${esc(c.m)}</div>` : '<div style="margin-bottom:auto"></div>'}</div>
-    </div></button>`;
-  $('#flipBtn').onclick = flip;
-  act.innerHTML = flipped
-    ? '<div class="actions"><button class="again" id="againBtn" type="button">Nochmal</button><button class="ok" id="okBtn" type="button">Gewusst</button></div>'
-    : '<button class="show" id="showBtn" type="button">Antwort zeigen</button>';
-  if (flipped) { $('#againBtn').onclick = again; $('#okBtn').onclick = ok; } else $('#showBtn').onclick = flip;
-}
-function flip() {
-  if (!queue.length) return;
-  flipped = !flipped;
-  const b = $('#flipBtn'); b.classList.toggle('turned', flipped); b.setAttribute('aria-pressed', flipped);
-  const act = $('#actBox');
-  act.innerHTML = flipped
-    ? '<div class="actions"><button class="again" id="againBtn" type="button">Nochmal</button><button class="ok" id="okBtn" type="button">Gewusst</button></div>'
-    : '<button class="show" id="showBtn" type="button">Antwort zeigen</button>';
-  if (flipped) { $('#againBtn').onclick = again; $('#okBtn').onclick = ok; } else $('#showBtn').onclick = flip;
-}
-function ok() { known.add(queue.shift().id); save(); flipped = false; render(); }
-function again() { const c = queue.shift(); queue.splice(Math.min(3, queue.length), 0, c); flipped = false; render(); }
-
-function renderTalk() {
-  const list = TALK.filter(t => who === 'Alle' || t.p === who);
-  $('#talk').innerHTML = list.map(t => `<article class="talk ${t.p}">
-      <div class="tag"><span>Folie ${t.n} · ${NAME[t.p]}</span><span>≈ ${t.t}</span></div>
-      <h2>${esc(t.h)}</h2>
-      <p class="say"><b>Erster Satz</b>${esc(t.s)}</p>
-      <ol class="keys">${t.k.map(k => `<li>${esc(k).replace(/\[(.+?)\]/g, '<span class="click">[$1]</span>')}</li>`).join('')}</ol>
-      ${t.e ? `<p class="say"><b>Übergabe</b>${esc(t.e)}</p>` : ''}
-    </article>`).join('');
-}
-function renderPrint() {
-  const groups = ['A', 'B', 'C', 'D', 'X'].filter(g => who === 'Alle' || g === who || g === 'X');
-  $('#printList').innerHTML = '<h2>Fragen &amp; Antworten</h2>' + groups.map(g => `<h3>${NAME[g]}</h3><table>${CARDS.filter(c => c.p === g).map(c => `<tr><td><b>${esc(c.q)}</b></td><td>${esc(c.a)}${c.m ? '<br><b>' + esc(c.m) + '</b>' : ''}</td></tr>`).join('')}</table>`).join('');
-}
-function setMode(m) {
-  mode = m; store.set('kk2-mode', m);
-  $('#tabLearn').setAttribute('aria-selected', m === 'learn'); $('#tabTalk').setAttribute('aria-selected', m === 'talk');
-  $('#learn').style.display = m === 'learn' ? 'flex' : 'none'; $('#talk').style.display = m === 'talk' ? 'flex' : 'none';
-}
-function setWho(w) {
-  who = w; store.set('kk2-who', w);
-  document.querySelectorAll('#who button').forEach(b => b.setAttribute('aria-pressed', b.dataset.who === w));
-  rebuild(); renderTalk(); renderPrint();
-}
-$('#tabLearn').onclick = () => setMode('learn'); $('#tabTalk').onclick = () => setMode('talk');
-document.querySelectorAll('#who button').forEach(b => { b.onclick = () => setWho(b.dataset.who); });
-addEventListener('keydown', e => {
-  if (mode !== 'learn' || e.target.closest('#who, .tabs')) return;
-  if (e.key === ' ' && e.target.tagName !== 'BUTTON') { e.preventDefault(); flip(); }
-  else if (flipped && (e.key === 'ArrowLeft' || e.key === '1')) again();
-  else if (flipped && (e.key === 'ArrowRight' || e.key === '2')) ok();
+document.querySelectorAll('.flip').forEach(b => {
+  b.setAttribute('aria-pressed', 'false');
+  b.addEventListener('click', () => { const t = b.classList.toggle('turned'); b.setAttribute('aria-pressed', String(t)); });
 });
-if (matchMedia('(hover: none)').matches) $('#keysHint').hidden = true;
-setMode(mode); setWho(who);
-})();
 </script>
